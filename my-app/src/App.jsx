@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
@@ -8,6 +9,11 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
+import Navigation from './components/Navigation';
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import Jobs from './pages/Jobs';
+import Profile from './pages/Profile';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -84,13 +90,18 @@ function App() {
 
   if (user && user.emailVerified && userProfile) {
     return (
-      <div>
-        <h1>Dashboard</h1>
-        <p>Welcome, {userProfile.name}</p>
-        <p>Role: {userProfile.role}</p>
-        <p>Phone: {userProfile.phone}</p>
-        <button onClick={handleLogout}>Logout</button>
-      </div>
+      <Router>
+        <Navigation />
+        <div className="app-container">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </div>
+      </Router>
     );
   }
 
