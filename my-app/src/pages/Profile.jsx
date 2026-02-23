@@ -1,119 +1,84 @@
 import { useState } from 'react';
 
-export default function Profile(props) {
-  // Determine if user is client or supplier
-  const isClient = props.userRole === 'CLIENT';
+export default function Profile(props = {}) {
+  const currentUser = props.currentUser || { name: '', address: '', email: '', phone: '' };
+  const userRole = props.userRole || 'CLIENT';
   
-  // Initialize state with current user data
+  const isClient = userRole === 'CLIENT';
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(props.currentUser.name || '');
-  const [address, setAddress] = useState(props.currentUser.address || '');
-  const [email, setEmail] = useState(props.currentUser.email || '');
-  const [phone, setPhone] = useState(props.currentUser.phone || '');
+  const [name, setName] = useState(currentUser.name || '');
+  const [address, setAddress] = useState(currentUser.address || '');
+  const [email, setEmail] = useState(currentUser.email || '');
+  const [phone, setPhone] = useState(currentUser.phone || '');
 
-  // Handle save - calls appropriate update function
   const handleSave = () => {
     const updatedUser = {
-      id: props.currentUser.id,
+      id: currentUser.id,
       name: name,
       address: address,
       email: email,
       phone: phone,
-      
     };
 
-    if (isClient) {
+    if (isClient && props.updateClient) {
       props.updateClient(updatedUser);
-    } else {
+    } else if (!isClient && props.updateSupplier) {
       props.updateSupplier(updatedUser);
     }
     
     setIsEditing(false);
   };
 
-  // Handle cancel - reset to original values
   const handleCancel = () => {
-    setName(props.currentUser.name || '');
-    setAddress(props.currentUser.address || '');
-    setEmail(props.currentUser.email || '');
-    setPhone(props.currentUser.phone || '');
+    setName(currentUser.name || '');
+    setAddress(currentUser.address || '');
+    setEmail(currentUser.email || '');
+    setPhone(currentUser.phone || '');
     setIsEditing(false);
   };
 
   return (
     <div className="page">
-      <h1>Profile</h1>
+      <h1>User Profile</h1>
       
       {!isEditing ? (
-        // VIEW MODE
         <div className="profile-view">
-          <div className="profile-field">
-            <label>Name:</label>
-            <p>{name}</p>
-          </div>
-          
-          <div className="profile-field">
-            <label>Address:</label>
-            <p>{address}</p>
-          </div>
-          
-          <div className="profile-field">
-            <label>Email:</label>
-            <p>{email}</p>
-          </div>
-          
-          <div className="profile-field">
-            <label>Phone:</label>
-            <p>{phone}</p>
-          </div>
-          
-          
+          <p><strong>Name:</strong> {name || 'Not set'}</p>
+          <p><strong>Address:</strong> {address || 'Not set'}</p>
+          <p><strong>Email:</strong> {email || 'Not set'}</p>
+          <p><strong>Phone:</strong> {phone || 'Not set'}</p>
           <button onClick={() => setIsEditing(true)}>Edit Profile</button>
         </div>
       ) : (
-        // EDIT MODE
-        <div className="profile-edit">
-          <div className="form-group">
-            <label>Name:</label>
-            <input 
-              type="text" 
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Address:</label>
-            <input 
-              type="text" 
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Email:</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Phone:</label>
-            <input 
-              type="tel" 
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-            />
-          </div>
-          
-          <div className="button-group">
-            <button onClick={handleSave}>Save Changes</button>
-            <button onClick={handleCancel}>Cancel</button>
-          </div>
-        </div>
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="profile-edit">
+          <input 
+            type="text" 
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input 
+            type="email" 
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input 
+            type="tel" 
+            placeholder="Phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <input 
+            type="text" 
+            placeholder="Address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+          <button type="submit">Save</button>
+          <button type="button" onClick={handleCancel}>Cancel</button>
+        </form>
       )}
     </div>
   );

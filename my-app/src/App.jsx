@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
+import './App.css';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -87,7 +88,7 @@ function App() {
     setMessage('');
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="loading">⏳ Loading...</div>;
 
   if (user && user.emailVerified && userProfile) {
     return (
@@ -119,13 +120,12 @@ function App() {
   }
 
   return (
-    <div>
+    <div className="page auth-page">
       <h2>{isLogin ? 'Login' : 'Register'}</h2>
 
-      {message && <p>{message}</p>}
+      {message && <p className="message">{message}</p>}
 
       <form onSubmit={handleAuth}>
-        
         {!isLogin && (
           <>
             <label>I am a: </label>
@@ -133,29 +133,23 @@ function App() {
               <option value="client">Client</option>
               <option value="supplier">Supplier</option>
             </select>
-            <br /><br />
 
             <input type="text" name="name" placeholder="Full Name" onChange={handleChange} required />
-            <br /><br />
 
             <input type="tel" name="phone" placeholder="Phone Number" onChange={handleChange} required />
-            <br /><br />
           </>
         )}
 
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <br /><br />
         
         <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <br /><br />
 
         <button type="submit">
           {isLogin ? 'Login' : 'Register'}
         </button>
       </form>
 
-      <br />
-      <button onClick={() => { setIsLogin(!isLogin); setMessage(''); }}>
+      <button className="toggle-btn" onClick={() => { setIsLogin(!isLogin); setMessage(''); }}>
         {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
       </button>
 
