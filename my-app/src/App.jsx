@@ -18,6 +18,9 @@ import Profile from './pages/Profile';
 import PostJob from './pages/PostJob.jsx'
 import TenderJob from './pages/TenderJob'
 import SupplierDocuments from './pages/SupplierDocuments';
+import SearchJobs from "./pages/SearchJobs.jsx";
+import AcceptTender from "./pages/AcceptTender.jsx";
+
 
 function App() {
     const [user, setUser] = useState(null);
@@ -105,6 +108,9 @@ function App() {
                         <Route path="*" element={<Navigate to="/"/>}/>
                         <Route path="/postjob" element={<PostJob/>}/>
                         <Route path="/tenderjob" element={<TenderJob/>}/>
+                        <Route path="/searchjobs" element={<SearchJobs/>}/>
+                        <Route path="/accepttender" element={<AcceptTender/>}/>
+
                     </Routes>
                 </div>
             </Router>

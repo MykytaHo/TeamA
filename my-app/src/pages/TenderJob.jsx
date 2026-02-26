@@ -7,12 +7,27 @@ export default function TenderJob() {
 
     return (
         <div className="page">
-            <h1>Tender Job [supplier]</h1>
+            <h1>Tender Job</h1>
             <form>
                 <select>
-                    <option>Select Job</option>
-                    Select a job you wish to tender for</select>
-                <input type="number" min="1"></input>
+                    <option>Select Category</option>
+                    <option>Plumbing</option>
+                    <option>Electrics</option>
+                    <option>Windows & Doors</option>
+                    <option>Transport</option>
+                    <option>Other</option>
+                </select>
+                <select>
+                    <option>Select job reference from list</option>
+                    //pull list of active jobs in category that are status 'posted'
+                    <option>JOB 1</option>
+                    <option>JOB 2</option>
+                    <option>JOB 3</option>
+                    <option>JOB 4</option>
+                    <option>JOB 5</option>
+                </select>
+                <p>Show the job description and budget here</p>
+                <input type="number" min="1" placeholder="Enter your quote here"></input>
                 <button onClick={submitTender}>Submit Tender</button>
                 <button onClick={cancelTender}>Cancel</button>
 

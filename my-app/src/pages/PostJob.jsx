@@ -23,15 +23,15 @@ export default function PostJob() {
 
     return (
         <div className="page">
-            <h1>Post New Job [client]</h1>
+            <h1>Post New Job</h1>
             <form>
-                <p>Please enter the details of the job you would like to post</p>
-                <p>You will need to provide a description of the job, and your offered price</p>
-                <p>Once posted, suppliers can follow up with you directly</p>
-                <h4>Job Category</h4>
+                <p>Please enter your job details</p>
+                <p>Select a category, provide a description of the job, and your budget</p>
+                <p>To post your ad, tap 'Preview', and if you are happy, tap 'Confirm & Post'</p>
+
 
                 <select onChange={(event) => setJobCategory(event.target.value)}>
-                    <option>What kind of service do you require?</option>
+                    <option>Select a category</option>
                     <option>Plumbing</option>
                     <option>Electrics</option>
                     <option>Windows & Doors</option>
@@ -41,9 +41,9 @@ export default function PostJob() {
 
                 </select>
                 <h4>Job Description</h4>
-                <input type="text" id={"inputjobdesc"}
-                       placeholder={"e.g. leaking tap"} onChange={(event) => setJobDescription(event.target.value)}/>
-                <h4>Fee (€)</h4>
+                <textarea rows="4" id={"inputjobdesc"}
+                          placeholder={"e.g. leaking tap"} onChange={(event) => setJobDescription(event.target.value)}/>
+                <h4>Budget (€)</h4>
                 <input type="number" min="1" id={"inputjobprice"}
                        onChange={(event) => setJobPrice(event.target.value)}/>
                 <button type="button" onClick={handlePreviewJob}>Preview</button>
