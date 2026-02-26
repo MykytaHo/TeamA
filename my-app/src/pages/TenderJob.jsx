@@ -7,11 +7,16 @@ export default function TenderJob() {
 
     return (
         <div className="page">
-            <h1>Tender for Job</h1>
-            <button onClick={submitTender}>Submit Tender</button>
-            <button onClick={cancelTender}>Cancel</button>
+            <h1>Tender Job [supplier]</h1>
+            <form>
+                <select>
+                    <option>Select Job</option>
+                    Select a job you wish to tender for</select>
+                <input type="number" min="1"></input>
+                <button onClick={submitTender}>Submit Tender</button>
+                <button onClick={cancelTender}>Cancel</button>
 
-
+            </form>
         </div>
     )
 
