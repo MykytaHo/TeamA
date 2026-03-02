@@ -7,20 +7,23 @@ export default function Jobs() {
         navigate('/postjob')
     }
 
+    const handleTender = () => {
+        navigate('/tenderjob')
+    }
+
     return (
         <div className="page">
             <h1>Jobs</h1>
-            <button onClick={handleNewJob}>Post a new Job</button>
-
+            <button type="button" onClick={handleNewJob}>Post a new Job</button>
             <br/>
             <br/>
-            <button>Search Jobs</button>
+            <button type="button">Search Jobs</button>
             <br/>
             <br/>
-            <button>Submit Tender</button>
+            <button type="button" onClick={handleTender}>Submit Tender</button>
             <br/>
             <br/>
-            <button>Accept Tender</button>
+            <button type="button">Accept Tender</button>
 
 
         </div>

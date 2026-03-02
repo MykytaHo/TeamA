@@ -16,6 +16,7 @@ import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
 import PostJob from './pages/PostJob.jsx'
+import TenderJob from './pages/TenderJob'
 import SupplierDocuments from './pages/SupplierDocuments';
 
 function App() {
@@ -103,6 +104,7 @@ function App() {
                         <Route path="/profile" element={<Profile/>}/>
                         <Route path="*" element={<Navigate to="/"/>}/>
                         <Route path="/postjob" element={<PostJob/>}/>
+                        <Route path="/tenderjob" element={<TenderJob/>}/>
                     </Routes>
                 </div>
             </Router>
