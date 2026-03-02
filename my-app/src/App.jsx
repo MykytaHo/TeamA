@@ -94,7 +94,7 @@ function App() {
     if (user && user.emailVerified && userProfile) {
         return (
             <Router>
-                <Navigation/>
+                <Navigation user={user} onLogout={handleLogout}/>
                 <div className="app-container">
                     <Routes>
                         <Route path="/" element={<Home/>}/>
