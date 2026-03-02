@@ -15,7 +15,7 @@ export default function Navigation({ user, onLogout }) {
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          Local Services
+          Traders Connect 
         </Link>
         <ul className="nav-menu">
           <li className="nav-item">
