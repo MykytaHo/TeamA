@@ -5,39 +5,41 @@
 }
 
 html, body {
-  background-color: #ffffff;
-  color: #333;
-  width: 100%;
-  height: 100%;
+    background-color: #ffffff;
+    color: #333;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+
 }
 
 #root {
-  background-color: #ffffff;
-  width: 100%;
-  min-height: 100vh;
+    background-color: #ffffff;
+    width: 100%;
+    min-height: 100vh;
 }
 
 .app-container {
-  width: 100%;
-  background-color: #ffffff;
-  min-height: calc(100vh - 60px);
+    width: 100%;
+    background-color: #ffffff;
+    min-height: calc(100vh - 60px);
 }
 
 .page {
-  padding: 40px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #ffffff;
-  min-height: calc(100vh - 60px);
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    min-height: calc(100vh - 60px);
 }
 
 .auth-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
 }
 
 .auth-page h2 {
@@ -50,6 +52,68 @@ html, body {
   width: 100%;
   max-width: 400px;
 }
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0066cc;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+}
+
+.auth-logo-icon {
+    background: #0066cc;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.auth-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.10);
+    padding: 36px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.auth-subheading {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.auth-toggle-link {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.875rem;
+    color: #0066cc;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.auth-toggle-link:hover {
+    text-decoration: underline;
+}
+
+
 
 .message {
   background-color: #fff3cd;
@@ -69,15 +133,24 @@ html, body {
 }
 
 form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 400px;
-  background-color: #f5f5f5;
-  padding: 30px;
-  border-radius: 8px;
-  margin-top: 20px;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 8px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.auth-card form {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 0;
+    border-radius: 0;
 }
 
 label {
@@ -120,8 +193,12 @@ button {
 }
 
 button:hover {
-  background-color: #0052a3 !important;
+    background-color: #0052a3 !important;
 }
+
+button:active {
+    background-color: #004080 !important;
+    transform: translateY(0);}
 
 .toggle-btn {
   margin-top: 20px;
@@ -142,4 +219,262 @@ p {
   color: #666;
   line-height: 1.6;
 }
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-size: 1.1rem;
+    color: #64748b;
+    gap: 8px;
+}
+
+.jobs-subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 28px;
+    margin-top: -10px;
+}
+
+/* 2-column grid, stacks to 1 column on mobile */
+.jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.job-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.job-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+    transform: translateY(-2px);
+}
+
+.job-card-icon {
+    font-size: 1.8rem;
+}
+
+.job-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-card-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.job-card p {
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+    flex: 1;
+}
+
+.job-card button {
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
+/* Role badges */
+.job-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.job-badge-blue {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.job-badge-green {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+@media (max-width: 600px) {
+    .jobs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Post Job page ────────────────────────────────────────── */
+
+.postjob-subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    margin-top: -10px;
+}
+
+/* Scoped form so it doesn't clash with the global form rule */
+.postjob-form {
+    max-width: 480px;
+}
+
+/* Each label + input stacked neatly */
+.postjob-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.postjob-field label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1e293b;
+}
+
+/* Button row: Preview on left, Cancel secondary on right */
+.postjob-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+/* Secondary / cancel button style */
+.btn-cancel {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.btn-cancel:hover {
+    background-color: #f8fafc !important;
+    transform: translateY(-1px);
+}
+
+/* ── Profile page ─────────────────────────────────────────── */
+
+.profile-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 28px;
+    max-width: 460px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.profile-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #dbeafe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.profile-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 5px 0;
+}
+
+/* Role badge */
+.profile-role-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+}
+
+.badge-blue  { background: #dbeafe; color: #1e40af; }
+.badge-green { background: #d1fae5; color: #065f46; }
+
+.profile-divider {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 0 0 20px 0;
+}
+
+/* Field rows in view mode */
+.profile-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.profile-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.profile-field-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profile-field-value {
+    font-size: 0.93rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+/* Inline success / error messages */
+.profile-message {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+    max-width: 460px;
+}
+
+.profile-message-error {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+
+.profile-message-success {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+}
+
 

@@ -42,8 +42,12 @@ export default function Profile(props = {}) {
     <div className="page">
       <h1>User Profile</h1>
       
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
+      
       {!isEditing ? (
         <div className="profile-view">
+          <p><strong>Role:</strong> {userRole || 'Not set'}</p>
           <p><strong>Name:</strong> {name || 'Not set'}</p>
           <p><strong>Address:</strong> {address || 'Not set'}</p>
           <p><strong>Email:</strong> {email || 'Not set'}</p>
@@ -52,32 +56,53 @@ export default function Profile(props = {}) {
         </div>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="profile-edit">
-          <input 
-            type="text" 
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input 
-            type="email" 
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input 
-            type="tel" 
-            placeholder="Phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          <input 
-            type="text" 
-            placeholder="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-          <button type="submit">Save</button>
-          <button type="button" onClick={handleCancel}>Cancel</button>
+          <div className="form-group">
+            <label>Full Name:</label>
+            <input 
+              type="text" 
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Email:</label>
+            <input 
+              type="email" 
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Phone:</label>
+            <input 
+              type="tel" 
+              placeholder="Phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Address:</label>
+            <input 
+              type="text" 
+              placeholder="Address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+          
+          <div className="button-group">
+            <button type="submit">Save Changes</button>
+            <button type="button" onClick={handleCancel}>Cancel</button>
+          </div>
         </form>
       )}
     </div>
