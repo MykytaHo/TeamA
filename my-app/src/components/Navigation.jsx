@@ -1,12 +1,21 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Navigation.css';
 
-export default function Navigation() {
+export default function Navigation({ user, onLogout }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+      navigate('/');
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          Local Services
+          Traders Connect 
         </Link>
         <ul className="nav-menu">
           <li className="nav-item">
@@ -21,6 +30,13 @@ export default function Navigation() {
           <li className="nav-item">
             <Link to="/profile" className="nav-link">Profile</Link>
           </li>
+          {user && (
+            <li className="nav-item">
+              <button className="logout-btn" onClick={handleLogout}>
+                Log out
+              </button>
+            </li>
+          )}
         </ul>
       </div>
     </nav>
