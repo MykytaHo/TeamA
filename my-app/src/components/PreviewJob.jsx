@@ -1,8 +1,5 @@
 export default function PreviewJob(props) {
 
-    const handleConfirmJobPost = () => {
-    }
-
     return (
         <div className="modal-overlay">
             <div className="modal-content">
@@ -15,7 +12,7 @@ export default function PreviewJob(props) {
                     <p>{props.jobPreviewPrice}</p>
 
                     <button type="button" id={"confirmJobPost"}
-                            onClick={handleConfirmJobPost}>Confirm
+                            onClick={props.onClickSubmit}>Submit
                     </button>
                     <button type="button" id={"editJobPost"}
                             onClick={props.onClickEdit}>Edit
