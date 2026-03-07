@@ -21,6 +21,7 @@ import SupplierDocuments from './pages/SupplierDocuments';
 import SearchJobs from "./pages/SearchJobs.jsx";
 import AcceptTender from "./pages/AcceptTender.jsx";
 
+import SearchTraders from './components/SearchTraders';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -105,6 +106,7 @@ function App() {
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/jobs" element={<Jobs/>}/>
                         <Route path="/profile" element={<Profile/>}/>
+                        <Route path="/search-traders" element={<SearchTraders/>}/>
                         <Route path="*" element={<Navigate to="/"/>}/>
                         <Route path="/postjob" element={<PostJob/>}/>
                         <Route path="/tenderjob" element={<TenderJob/>}/>
@@ -167,7 +169,7 @@ function App() {
             </button>
 
         </div>
-    );
+  );
     // comment
 }
 
