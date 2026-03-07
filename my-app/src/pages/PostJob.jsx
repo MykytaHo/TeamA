@@ -1,8 +1,10 @@
 import {useNavigate} from 'react-router-dom';
 import PreviewJob from '../components/PreviewJob.jsx'
-import {useState, useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {db} from '../services/firebase';
-import {collection, getDocs, addDoc, serverTimestamp} from "firebase/firestore";
+import {addDoc, collection, getDocs, serverTimestamp} from "firebase/firestore";
+import {storage} from '../services/firebase';
+import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
 
 export default function PostJob() {
     const navigate = useNavigate();
@@ -12,7 +14,7 @@ export default function PostJob() {
     const [isDisplayed, setIsDisplayed] = useState(false);
     const [categories, setCategories] = useState([]);
     const selectedCategoryName = categories.find(c => c.id === jobCategory)?.category || "None";
-
+    const [imageFile, setImageFile] = useState(null);
 
     useEffect(() => {
         getJobCategories();
@@ -47,17 +49,27 @@ export default function PostJob() {
 
         if (jobCategory === "") {
             alert("Please select a category for your job")
+            closePreview();
             return;
         }
         if (jobDescription === "") {
             alert("Please enter a short description of your job");
+            closePreview();
             return;
         }
 
         if (jobPrice <= 0) {
             alert("Please enter a budget for your job");
+            closePreview();
+            return;
         }
         try {
+            let imageLink = "";
+            if (imageFile) {
+                const storageRef = ref(storage, `jobImages/${Date.now()}_{imageFile.name}`);
+                const snapShot = await uploadBytes(storageRef, imageFile);
+                imageLink = await getDownloadURL(snapShot.ref);
+            }
             const jobsList = collection(db, "jobList");
             const newJob = {
                 status: "posted",
@@ -66,7 +78,8 @@ export default function PostJob() {
                 description: jobDescription,
                 clientID: "Fake Client",
                 createdAt: serverTimestamp(),
-                tenderCount: 0
+                tenderCount: 0,
+                jobImage: imageLink
             };
             await addDoc(jobsList, newJob);
 
@@ -84,10 +97,7 @@ export default function PostJob() {
         <div className="page">
             <h1>Post New Job</h1>
             <form>
-                <p>Please enter your job details</p>
-                <p>Select a category, provide a description of the job, and your budget</p>
-                <p>To post your ad, tap 'Preview', and if you are happy, tap 'Confirm & Post'</p>
-
+                <p>Select a category, provide a description of the job, an optional image and your budget</p>
 
                 <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
                     <option value={""}>What kind of service do you require?</option>
@@ -105,13 +115,31 @@ export default function PostJob() {
                 <h4>Budget (€)</h4>
                 <input type="number" min="1" id={"inputjobprice"}
                        onChange={(event) => setJobPrice(event.target.value)}/>
+                <h4>Upload Image (max 2MB)</h4>
+
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file && file.size > 2097152) { // 2MB Limit
+                            alert("File is too big! Please select an image under 2MB.");
+                            e.target.value = null;
+                            setImageFile(null);
+                        } else {
+                            setImageFile(file);
+                        }
+                    }}
+                />
                 <button type="button" onClick={handlePreviewJob}>Preview</button>
                 <button type="button" onClick={handleCancelPost}>Cancel</button>
+
                 {isDisplayed && <PreviewJob onClickSubmit={handlePostJobClick}
                                             onClickEdit={closePreview}
                                             jobPreviewCategory={selectedCategoryName}
                                             jobPreviewDescription={jobDescription}
-                                            jobPreviewPrice={jobPrice}/>}
+                                            jobPreviewPrice={jobPrice}
+                                            imagePreview={imageFile ? URL.createObjectURL(imageFile) : null}/>}
             </form>
         </div>
     );
