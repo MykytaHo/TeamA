@@ -12,10 +12,9 @@ export default function PostJob() {
     const [jobCategory, setJobCategory] = useState("");
     const [jobDescription, setJobDescription] = useState("");
     const [jobName, setJobName] = useState("");
-    const [jobPrice, setJobPrice] = useState("");
+    const [jobPrice, setJobPrice] = useState(0);
     const [isDisplayed, setIsDisplayed] = useState(false);
     const [categories, setCategories] = useState([]);
-    const selectedCategoryName = categories.find(c => c.id === jobCategory)?.category || "None";
     const [imageFile, setImageFile] = useState(null);
     const user = auth.currentUser;
 
@@ -42,6 +41,10 @@ export default function PostJob() {
     };
 
     const handlePreviewJob = () => {
+        if (jobCategory === "" || jobName === "" || jobDescription === "" || jobPrice <= 0) {
+            alert("Please complete all fields");
+            return;
+        }
 
         setIsDisplayed(true);
     }
@@ -49,30 +52,43 @@ export default function PostJob() {
         navigate('/')
     }
 
+    const handleReset = () => {
+        let result = confirm("Are you sure you want to reset the form?");
+        if (result) {
+            setJobCategory("");
+            setJobName("");
+            setJobPrice(0);
+            setJobDescription("");
+            setImageFile(null);
+
+        }
+
+    }
+
     const handlePostJobClick = async () => {
 
-        if (jobCategory === "") {
-            alert("Please select a category for your job")
-            closePreview();
-            return;
-        }
-        if (jobName === "") {
-            alert("Please enter a short title for your job");
-            closePreview();
-            return;
-        }
-
-        if (jobDescription === "") {
-            alert("Please enter a short description of your job");
-            closePreview();
-            return;
-        }
-
-        if (jobPrice <= 0) {
-            alert("Please enter a budget for your job");
-            closePreview();
-            return;
-        }
+        // if (jobCategory === "") {
+        //     alert("Please select a category for your job")
+        //     closePreview();
+        //     return;
+        // }
+        // if (jobName === "") {
+        //     alert("Please enter a short title for your job");
+        //     closePreview();
+        //     return;
+        // }
+        //
+        // if (jobDescription === "") {
+        //     alert("Please enter a short description of your job");
+        //     closePreview();
+        //     return;
+        // }
+        //
+        // if (jobPrice <= 0) {
+        //     alert("Please enter a budget for your job");
+        //     closePreview();
+        //     return;
+        // }
         try {
             let imageLink = "";
             if (imageFile) {
@@ -91,7 +107,6 @@ export default function PostJob() {
                 createdAt: serverTimestamp(),
                 tenderCount: 0,
                 jobImage: imageLink,
-                jobID: crypto.randomUUID()
             };
             await addDoc(jobsList, newJob);
 
@@ -113,7 +128,7 @@ export default function PostJob() {
                 <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
                     <option value={""}>What type of job is it?</option>
                     {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
+                        <option key={cat.id} value={cat.category}>
                             {cat.category}
                         </option>
                     ))}
@@ -147,11 +162,12 @@ export default function PostJob() {
                     }}
                 />
                 <button type="button" onClick={handlePreviewJob}>Preview</button>
+                <button type="reset" onClick={handleReset}>Reset</button>
                 <button type="button" onClick={handleCancelPost}>Cancel</button>
 
                 {isDisplayed && <PreviewJob onClickSubmit={handlePostJobClick}
                                             onClickEdit={closePreview}
-                                            jobPreviewCategory={selectedCategoryName}
+                                            jobPreviewCategory={jobCategory}
                                             jobPreviewDescription={jobDescription}
                                             jobPreviewPrice={jobPrice}
                                             jobPreviewName={jobName}
