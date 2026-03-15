@@ -27,8 +27,8 @@ html, body {
 }
 
 .page {
-    padding: 40px 20px;
-    max-width: 1200px;
+    padding: 20px 20px;
+    max-width: 100vh;
     margin: 0 auto;
     background-color: #ffffff;
     min-height: calc(100vh - 60px);
@@ -68,7 +68,7 @@ html, body {
 .page h1 {
     color: #333;
     font-size: 32px;
-    margin-bottom: 16px;
+    /*margin-bottom: 16px;*/
 }
 
 form {
@@ -79,8 +79,8 @@ form {
     background-color: #f5f5f5;
     padding: 16px;
     border-radius: 8px;
-    margin: 24px auto;
-    width: 300px;
+    margin: 16px auto;
+    width: 400px;
     box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.35)
 }
 
@@ -100,6 +100,10 @@ input, select, textarea {
     font-family: inherit;
     overflow: auto;
     resize: none;
+    width: 100%; /* Forces them to the same width */
+    line-height: 1.5; /* Standardizes the height of the text inside */
+    appearance: none; /* Removes the default "browser" styling for selects */
+    display: block;
 }
 
 input::placeholder {

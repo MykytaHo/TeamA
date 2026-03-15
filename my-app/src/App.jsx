@@ -106,8 +106,8 @@ function App() {
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/jobs" element={<Jobs/>}/>
                         <Route path="/profile" element={<Profile/>}/>
-                        <Route path="/search-traders" element={<SearchTraders/>}/>
-                        <Route path="*" element={<Navigate to="/"/>}/>
+                        {/*<Route path="/search-traders" element={<SearchTraders/>}/>*/}
+                        {/*<Route path="*" element={<Navigate to="/"/>}/>*/}
                         <Route path="/postjob" element={<PostJob/>}/>
                         <Route path="/tenderjob" element={<TenderJob/>}/>
                         <Route path="/searchjobs" element={<SearchJobs/>}/>
@@ -169,7 +169,7 @@ function App() {
             </button>
 
         </div>
-  );
+    );
     // comment
 }
 
