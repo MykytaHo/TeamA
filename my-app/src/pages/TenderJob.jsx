@@ -111,10 +111,11 @@ export default function TenderJob() {
 
     return (
         <div className="page">
-            <h1>Tender Job</h1>
+
             <form>
+                <h1>Tender Job</h1>
                 <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
-                    <option value={""}>Service type</option>
+                    <option value={""}>I am.....</option>
                     {categories.map((cat) => (
                         <option key={cat.id} value={cat.category}>
                             {cat.category}

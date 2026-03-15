@@ -1,12 +1,14 @@
 import {Link, useNavigate} from 'react-router-dom';
 import './Navigation.css';
-import {useState} from "react";
+import homeIcon from '../assets/home.svg'
+import jobIcon from '../assets/briefcase.svg'
+import profileIcon from '../assets/user.svg'
+import leaveIcon from '../assets/leave.svg'
+import logo from '../assets/2-letter-house-logo.png'
 
 export default function Navigation({user, onLogout}) {
 
-    const [dropDownOpacity, setDropDownOpacity] = useState(0);
     const navigate = useNavigate();
-
     const handleLogout = () => {
         if (onLogout) {
             onLogout();
@@ -16,41 +18,33 @@ export default function Navigation({user, onLogout}) {
     return (
         <nav className="navbar">
             <div className="nav-container">
-                <Link to="/" className="nav-logo">
-                    Traders Connect
-                </Link>
+                <Link to="/" className="nav-logo"> <img src={logo} alt="TC logo"
+                                                        style={{width: '30px', height: '30px'}}/></Link>
                 <ul className="nav-menu">
-                    <li className="nav-item">
-                        <Link to="/" className="nav-link">Home</Link>
+                    <li className="nav-icon">
+                        <Link to="/" className="nav-icon"><img src={homeIcon} alt="home icon"
+                                                               style={{width: '20px'}}/></Link>
                     </li>
-                    <li className="nav-item">
-                        <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                    </li>
-                    <li className="nav-item" onMouseEnter={() => {
-                        setDropDownOpacity(1)
-                    }}
-                        onMouseLeave={() => {
-                            setDropDownOpacity(0)
-                        }}>
-                        <Link to="/jobs" className="nav-link">Jobs</Link>
-                        <div className="jobs-dropdown"
-                             style={{opacity: dropDownOpacity, pointerEvents: dropDownOpacity === 1 ? "auto" : "none"}
-                             }>
-                            <Link to="/postjob" className="dropdown-link">Post Job</Link>
-                            <Link to="/searchjobs" className="dropdown-link">Search Jobs</Link>
-                            <Link to="/tenderjob" className="dropdown-link">Submit Tender</Link>
-                            <Link to="/accepttender" className="dropdown-link">Accept Tender</Link>
 
-                        </div>
+                    <li className="nav-icon">
+                        <Link to="/jobs" className="nav-link"><img src={jobIcon} alt="job icon"
+                                                                   style={{width: '20px', height: '20px'}}/></Link>
                     </li>
-                    <li className="nav-item">
-                        <Link to="/profile" className="nav-link">Profile</Link>
+
+                    <li className="nav-icon">
+                        <Link to="/profile" className="nav-link"><img src={profileIcon} alt="user icon"
+                                                                      style={{width: '20px', height: '20px'}}/></Link>
                     </li>
                     {user && (
-                        <li className="nav-item">
-                            <button className="logout-btn" onClick={handleLogout}>
-                                Log out
-                            </button>
+                        <li className="nav-icon">
+                            <Link onClick={handleLogout} to="" className="nav-link"><img src={leaveIcon}
+                                                                                         alt="leave icon"
+                                                                                         className="nav-link"
+                                                                                         style={{
+                                                                                             width: '20px',
+                                                                                             height: '20px'
+                                                                                         }}/>
+                            </Link>
                         </li>
                     )}
                 </ul>

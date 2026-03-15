@@ -123,10 +123,10 @@ export default function PostJob() {
     return (
         <div className="page">
             <form>
-                <h1>Post New Job</h1>
+                <h1>Post A Job</h1>
 
                 <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
-                    <option value={""}>What type of job is it?</option>
+                    <option value={""}>I need.....</option>
                     {categories.map((cat) => (
                         <option key={cat.id} value={cat.category}>
                             {cat.category}
