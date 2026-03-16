@@ -9,15 +9,12 @@
     "install:app": "cd my-app && npm install"
   },
   "dependencies": {
-<<<<<<< HEAD
 
     "firebase": "^12.9.0",
     "react": "^19.2.4",
     "firebase": "^12.10.0"
-=======
-    "firebase": "^12.10.0",
-    "react": "^19.2.4"
->>>>>>> fcd998dfb19a8b408d505470749917948c4cf1c8
+
+
   },
   "devDependencies": {
     "vite": "^7.3.1"

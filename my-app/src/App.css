@@ -13,7 +13,6 @@ html, body {
     width: 90%;
     max-width: 400px;
     margin: 0 auto;
-    overflow: hidden;
     min-width: 300px;
 
 }
@@ -213,7 +212,6 @@ p {
     height: 403px;
     width: 100%;
     background-color: #eee;
-    overflow: hidden;
 }
 
 .logo-nav-icon {
