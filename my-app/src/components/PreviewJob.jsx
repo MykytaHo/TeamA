@@ -8,6 +8,8 @@ export default function PreviewJob(props) {
                 <form>
                     <h3>Category</h3>
                     <p>{props.jobPreviewCategory}</p>
+                    <h3>Job name</h3>
+                    <p>{props.jobPreviewName}</p>
                     <h3>Description</h3>
                     <p>{props.jobPreviewDescription}</p>
                     <h3>Budget</h3>

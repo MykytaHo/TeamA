@@ -22,6 +22,7 @@ import SearchJobs from "./pages/SearchJobs.jsx";
 import AcceptTender from "./pages/AcceptTender.jsx";
 
 import SearchTraders from './components/SearchTraders';
+import HomeDash from "./pages/HomeDash.jsx";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -98,24 +99,26 @@ function App() {
 
     if (user && user.emailVerified && userProfile) {
         return (
-            <Router>
-                <Navigation user={user} onLogout={handleLogout}/>
-                <div className="app-container">
-                    <Routes>
-                        <Route path="/" element={<Home/>}/>
-                        <Route path="/dashboard" element={<Dashboard/>}/>
-                        <Route path="/jobs" element={<Jobs/>}/>
-                        <Route path="/profile" element={<Profile/>}/>
-                        <Route path="/search-traders" element={<SearchTraders/>}/>
-                        <Route path="*" element={<Navigate to="/"/>}/>
-                        <Route path="/postjob" element={<PostJob/>}/>
-                        <Route path="/tenderjob" element={<TenderJob/>}/>
-                        <Route path="/searchjobs" element={<SearchJobs/>}/>
-                        <Route path="/accepttender" element={<AcceptTender/>}/>
+            <>
+                <Router>
+                    <Navigation user={user} onLogout={handleLogout}/>
+                    <div className="app-container">
+                        <Routes>
+                            <Route path="/" element={<HomeDash/>}/>
+                            <Route path="/dashboard" element={<Dashboard/>}/>
+                            <Route path="/jobs" element={<Jobs/>}/>
+                            <Route path="/profile" element={<Profile/>}/>
+                            {/*<Route path="/search-traders" element={<SearchTraders/>}/>*/}
+                            {/*<Route path="*" element={<Navigate to="/"/>}/>*/}
+                            <Route path="/postjob" element={<PostJob/>}/>
+                            <Route path="/tenderjob" element={<TenderJob/>}/>
+                            <Route path="/searchjobs" element={<SearchJobs/>}/>
+                            <Route path="/accepttender" element={<AcceptTender/>}/>
 
-                    </Routes>
-                </div>
-            </Router>
+                        </Routes>
+                    </div>
+                </Router>
+            </>
         );
     }
 
@@ -169,7 +172,7 @@ function App() {
             </button>
 
         </div>
-  );
+    );
     // comment
 }
 
