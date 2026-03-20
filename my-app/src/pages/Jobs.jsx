@@ -1,6 +1,9 @@
 import {useNavigate} from 'react-router-dom';
+import {useRole} from "../services/RoleContext.jsx";
+
 
 export default function Jobs() {
+    const {role, loading} = useRole();
 
     const navigate = useNavigate();
     const handleNewJob = () => {

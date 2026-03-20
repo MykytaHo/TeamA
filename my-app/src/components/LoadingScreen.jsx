@@ -1,8 +1,21 @@
-import loadingLogo from "../assets/loading-logo.png";
+// import loadingLogo from "../assets/loading-logo.png";
+//
+//
+// export default function LoadingScreen() {
+//     return (
+//         <img id="loadingimage" src={loadingLogo} alt="TC loading screen" width="300" height='auto'/>
+//     )
+// }
 
+import './LoadingScreen.css';
 
-export default function LoadingScreen() {
+const LoadingScreen = () => {
     return (
-        <img id="loadingimage" src={loadingLogo} alt="TC loading screen" width="300" height='auto'/>
-    )
-}
+        <div className="loading-container">
+            <div className="spinner"></div>
+            <p className="loading-text">Loading...</p>
+        </div>
+    );
+};
+
+export default LoadingScreen;
