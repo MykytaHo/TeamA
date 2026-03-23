@@ -1,51 +1,179 @@
 import {useNavigate} from 'react-router-dom';
 import PreviewJob from '../components/PreviewJob.jsx'
-import {useState} from "react"
-
+import {useEffect, useState} from 'react';
+import {db} from '../services/firebase';
+import {addDoc, collection, getDocs, serverTimestamp, doc, getDoc} from "firebase/firestore";
+import {storage} from '../services/firebase';
+import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
+import {auth} from "../firebase.js";
 
 export default function PostJob() {
     const navigate = useNavigate();
-    const [jobTitle, setJobTitle] = useState("");
+    const [jobCategory, setJobCategory] = useState("");
     const [jobDescription, setJobDescription] = useState("");
-    const [jobPrice, setJobPrice] = useState("");
+    const [jobName, setJobName] = useState("");
+    const [jobPrice, setJobPrice] = useState(0);
     const [isDisplayed, setIsDisplayed] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [imageFile, setImageFile] = useState(null);
+    const user = auth.currentUser;
+
+    useEffect(() => {
+        getJobCategories();
+    }, []);
+
+    const getJobCategories = async () => {
+        try {
+            const jobCategorySnapshot = await getDocs(collection(db, "jobCategories"))
+            const categoryData = jobCategorySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setCategories(categoryData)
+        } catch (error) {
+            console.log("Database error ", error)
+        }
+    }
+
 
     const closePreview = () => {
         setIsDisplayed(false)
     };
 
     const handlePreviewJob = () => {
+        if (jobCategory === "" || jobName === "" || jobDescription === "" || jobPrice <= 0) {
+            alert("Please complete all fields");
+            return;
+        }
+
         setIsDisplayed(true);
     }
     const handleCancelPost = () => {
         navigate('/')
     }
 
+    const handleReset = () => {
+        let result = confirm("Are you sure you want to reset the form?");
+        if (result) {
+            setJobCategory("");
+            setJobName("");
+            setJobPrice(0);
+            setJobDescription("");
+            setImageFile(null);
+
+        }
+
+    }
+
+    const handlePostJobClick = async () => {
+
+        // if (jobCategory === "") {
+        //     alert("Please select a category for your job")
+        //     closePreview();
+        //     return;
+        // }
+        // if (jobName === "") {
+        //     alert("Please enter a short title for your job");
+        //     closePreview();
+        //     return;
+        // }
+        //
+        // if (jobDescription === "") {
+        //     alert("Please enter a short description of your job");
+        //     closePreview();
+        //     return;
+        // }
+        //
+        // if (jobPrice <= 0) {
+        //     alert("Please enter a budget for your job");
+        //     closePreview();
+        //     return;
+        // }
+        try {
+            let imageLink = "";
+            if (imageFile) {
+                const storageRef = ref(storage, `jobImages/${Date.now()}_{imageFile.name}`);
+                const snapShot = await uploadBytes(storageRef, imageFile);
+                imageLink = await getDownloadURL(snapShot.ref);
+            }
+            const jobsList = collection(db, "jobList");
+            const newJob = {
+                status: "posted",
+                jobName: jobName,
+                budget: Number(jobPrice),
+                categoryID: jobCategory,
+                description: jobDescription,
+                clientID: user.uid,
+                createdAt: serverTimestamp(),
+                tenderCount: 0,
+                jobImage: imageLink,
+            };
+            await addDoc(jobsList, newJob);
+
+            alert("Your job is now live!  Press OK to return to home page")
+            navigate('/');
+        } catch (error) {
+            console.error("Error posting job: ", error);
+            alert("Failed to post job. Check console for details.");
+        }
+
+
+    }
+
     return (
         <div className="page">
-            <h1>Post New Job</h1>
-            <p>Please enter the details of the job you would like to post</p>
-            <p>You will need to provide a description of the job, and your offered price</p>
-            <p>Once posted, suppliers can follow up with you directly</p>
-            <h4>Job Name</h4>
-            <textarea style={{margin: '10px 0px'}} id={"inputjobtitle"} rows="2" cols="60" placeholder={"e.g." +
-                "Leaking Tap URGENT"} onChange={(event) => setJobTitle(event.target.value)}/>
-            <h4>Job Description</h4>
-            <textarea style={{margin: '10px 0px'}} id={"inputjobdesc"} rows="3" cols="60" placeholder={"e.g. The hot" +
-                " water tap in my bathroom is constantly dripping.  My husband tried to fix it but he's made it" +
-                " worse."} onChange={(event) => setJobDescription(event.target.value)}/>
-            <h4>Fee (€)</h4>
-            <textarea style={{margin: '10px 0px'}} id={"inputjobprice"} rows="2" cols="60" placeholder={"format" +
-                " 123.45"} onChange={(event) => setJobPrice(event.target.value)}/>
-            <br/>
-            <button style={{margin: '10px 80px'}} onClick={handlePreviewJob}>Preview</button>
+            <form>
+                <h1>Post A Job</h1>
 
-            <button style={{margin: '10px 40px'}} onClick={handleCancelPost}>Cancel</button>
+                <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
+                    <option value={""}>I need.....</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.category}>
+                            {cat.category}
+                        </option>
+                    ))}
 
-            {isDisplayed && <PreviewJob onClickEdit={closePreview}
-                                        jobPreviewTitle={jobTitle}
-                                        jobPreviewDescription={jobDescription}
-                                        jobPreviewPrice={jobPrice}/>}
+
+                </select>
+                <h4>Enter a short job name</h4>
+                <textarea rows="1" maxLength="40" id={"inputjobname"}
+                          placeholder={"e.g. Leaking tap"} onChange={(event) => setJobName(event.target.value)}/>
+                <h4>And a slightly longer job description</h4>
+                <textarea rows="2" id={"inputjobdesc"}
+                          placeholder={"e.g. hot waster tap in bathroom etc...."}
+                          onChange={(event) => setJobDescription(event.target.value)}/>
+                <h4>What is your budget (€)</h4>
+                <input type="number" min="1" id={"inputjobprice"}
+                       onChange={(event) => setJobPrice(event.target.value)}/>
+                <h4>Upload an optional image</h4>
+
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file && file.size > 2097152) {
+                            alert("File is too big! Please select an image under 2MB.");
+                            e.target.value = null;
+                            setImageFile(null);
+                        } else {
+                            setImageFile(file);
+                        }
+                    }}
+                />
+                <button type="button" onClick={handlePreviewJob}>Preview</button>
+                <button type="reset" onClick={handleReset}>Reset</button>
+                <button type="button" onClick={handleCancelPost}>Cancel</button>
+
+                {isDisplayed && <PreviewJob onClickSubmit={handlePostJobClick}
+                                            onClickEdit={closePreview}
+                                            jobPreviewCategory={jobCategory}
+                                            jobPreviewDescription={jobDescription}
+                                            jobPreviewPrice={jobPrice}
+                                            jobPreviewName={jobName}
+                                            imagePreview={imageFile ? URL.createObjectURL(imageFile) : null}/>}
+            </form>
         </div>
     );
+
 }
