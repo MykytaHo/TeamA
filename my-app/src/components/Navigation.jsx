@@ -19,6 +19,12 @@ export default function Navigation() {
             <Link to="/jobs" className="nav-link">Jobs</Link>
           </li>
           <li className="nav-item">
+            <Link to="/postjob" className="nav-link">Post Job</Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/messaging" className="nav-link">Messages</Link>
+          </li>
+          <li className="nav-item">
             <Link to="/profile" className="nav-link">Profile</Link>
           </li>
         </ul>

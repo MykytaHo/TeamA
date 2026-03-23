@@ -17,6 +17,7 @@ import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
 import PostJob from './pages/PostJob.jsx'
 import SupplierDocuments from './pages/SupplierDocuments';
+import Messaging from './pages/messaging.jsx';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -96,14 +97,17 @@ function App() {
             <Router>
                 <Navigation/>
                 <div className="app-container">
-                    <Routes>
-                        <Route path="/" element={<Home/>}/>
-                        <Route path="/dashboard" element={<Dashboard/>}/>
-                        <Route path="/jobs" element={<Jobs/>}/>
-                        <Route path="/profile" element={<Profile/>}/>
-                        <Route path="*" element={<Navigate to="/"/>}/>
-                        <Route path="/postjob" element={<PostJob/>}/>
-                    </Routes>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/jobs" element={<Jobs />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/messaging" element={<Messaging />} />
+                    <Route path="/documents" element={<SupplierDocuments />} />
+                    <Route path="/postjob" element={<PostJob />} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                    
+                </Routes>
                 </div>
             </Router>
         );
