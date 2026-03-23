@@ -1,44 +1,21 @@
 export default function PreviewJob(props) {
 
+    const handleConfirmJobPost = () => {
+    }
+
     return (
+        <div>
+            <h2>Job Preview</h2>
+            <h3>Title</h3>
+            <p>{props.jobPreviewTitle}</p>
+            <h3>Description</h3>
+            <p>{props.jobPreviewDescription}</p>
+            <h3>Price €</h3>
+            <p>{props.jobPreviewPrice}</p>
 
+            <button style={{margin: '10px 80px'}} id={"confirmJobPost"} onClick={handleConfirmJobPost}>Confirm</button>
+            <button style={{margin: '10px 40px'}} id={"editJobPost"} onClick={props.onClickEdit}>Edit</button>
 
-        <div id="form-opaque-background">
-            <div id="modal-box-preview">
-                <form>
-                    <h3>Category</h3>
-                    <p>{props.jobPreviewCategory}</p>
-                    <h3>Job name</h3>
-                    <p>{props.jobPreviewName}</p>
-                    <h3>Description</h3>
-                    <p>{props.jobPreviewDescription}</p>
-                    <h3>Budget</h3>
-                    <p>{"€" + props.jobPreviewPrice}</p>
-                    <button type="button" id={"editJobPost"}
-                            onClick={props.onClickEdit}>Edit
-                    </button>
-                    <button type="button" id={"confirmJobPost"}
-                            onClick={props.onClickSubmit}>Submit
-                    </button>
-                </form>
-                <form>
-                    <div id="imagePreviewContainer">
-                        {props.imagePreview ? (
-                            <>
-                                <img
-                                    id="imagePostingPreview"
-                                    src={props.imagePreview}
-                                    alt="job preview"
-                                />
-                            </>
-                        ) : (
-                            <p style={{color: '#999'}}>No image selected</p>
-                        )}
-                    </div>
-                </form>
-
-            </div>
         </div>
     )
 }
-
