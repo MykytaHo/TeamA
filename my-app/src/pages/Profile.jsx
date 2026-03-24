@@ -192,6 +192,32 @@ export default function Profile() {
                     </form>
                 )}
             </form>
+            {/* Supplier Documents Link - only show for suppliers */}
+      {userRole === 'supplier' && (
+        <>
+          <hr style={{ margin: '20px 0' }} />
+          <div className="supplier-section" style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+            <h2>Supplier Credentials</h2>
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+              Upload and manage your certification documents to build trust with clients.
+            </p>
+            <a 
+              href="/documents" 
+              style={{ 
+                display: 'inline-block', 
+                padding: '10px 20px', 
+                backgroundColor: '#0066cc', 
+                color: '#fff', 
+                borderRadius: '5px', 
+                textDecoration: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Manage Credentials
+            </a>
+          </div>
+        </>
+      )}
         </div>
     );
 }
