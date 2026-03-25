@@ -1,22 +1,7 @@
 {
-  "name": "TeamA",
-  "description": "Local Services Marketplace Application",
+  "name": "teama-root-shell",
+  "private": true,
   "scripts": {
-    "start": "cd my-app && npm run dev",
-    "dev": "cd my-app && npm run dev",
-    "build": "cd my-app && npm run build",
-    "preview": "cd my-app && npm run preview",
-    "install:app": "cd my-app && npm install"
-  },
-  "dependencies": {
-
-    "firebase": "^12.9.0",
-    "react": "^19.2.4",
-    "firebase": "^12.10.0"
-
-
-  },
-  "devDependencies": {
-    "vite": "^7.3.1"
+    "dev": "cd my-app && npm run dev"
   }
 }
