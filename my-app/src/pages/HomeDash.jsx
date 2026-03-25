@@ -75,11 +75,10 @@ const ClientComponents = () => {
         <div>
         <form onSubmit={handlePostJob}>
             <input name="jobName" value={formData.jobName} onChange={handleChange} placeholder="Job Title" required />
-            
             <select name="categoryID" value={formData.categoryID} onChange={handleChange} required>
             <option value="" disabled>Select Category</option>
             {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name || cat.title || cat.id}</option>
+                <option key={cat.id} value={cat.id}>{cat.category || "Error"}</option>
             ))}
             </select>
 
