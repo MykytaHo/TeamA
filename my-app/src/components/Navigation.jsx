@@ -5,6 +5,7 @@ import jobIcon from '../assets/briefcase.svg'
 import profileIcon from '../assets/user.svg'
 import leaveIcon from '../assets/leave.svg'
 import logo from '../assets/2-letter-house-logo.png'
+import envelopeIcon from '../assets/message.svg'
 
 export default function Navigation({user, onLogout}) {
 
@@ -39,11 +40,20 @@ export default function Navigation({user, onLogout}) {
 
                     <li className="nav-icon">
                         <Link tooltip="Profile" to="/profile" className="nav-link"><img src={profileIcon}
-                                                                                        alt="user icon"
-                                                                                        style={{
-                                                                                            width: '20px',
-                                                                                            height: '20px'
-                                                                                        }}/></Link>
+                                                                    alt="user icon"
+                                                                    style={{
+                                                                        width: '20px',
+                                                                        height: '20px'
+                                                                    }}/></Link>
+                    </li>
+
+                    <li className="nav-icon">
+                        <Link tooltip="Messages" to="/messaging" className="nav-link">
+                            <img src={envelopeIcon} alt="messages icon" style={{ width: '20px', height: '20px' }}/>
+                        </Link>
+                    
+
+
                     </li>
                     {user && (
                         <li tooltip="Logout" className="nav-icon">
