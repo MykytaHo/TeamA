@@ -20,6 +20,9 @@ import TenderJob from './pages/TenderJob'
 import SupplierDocuments from './pages/SupplierDocuments';
 import SearchJobs from "./pages/SearchJobs.jsx";
 import AcceptTender from "./pages/AcceptTender.jsx";
+import LeaveReview from "./pages/LeaveReview.jsx";
+import JobDetails from "./pages/JobDetails.jsx";
+import Messaging from "./pages/Messaging.jsx";
 
 import SearchTraders from './components/SearchTraders';
 import HomeDash from "./pages/HomeDash.jsx";
@@ -114,7 +117,9 @@ function App() {
                             <Route path="/tenderjob" element={<TenderJob/>}/>
                             <Route path="/searchjobs" element={<SearchJobs/>}/>
                             <Route path="/accepttender" element={<AcceptTender/>}/>
-
+                            <Route path="/leavereview" element={<LeaveReview/>}/>
+                            <Route path="/job/:jobId" element={<JobDetails/>}/>
+                            <Route path="/messaging" element={<Messaging/>}/>
                         </Routes>
                     </div>
                 </Router>

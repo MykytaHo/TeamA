@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import {auth, db} from '../firebase';
-import {doc, getDoc, updateDoc} from 'firebase/firestore';
+import {doc, getDoc, updateDoc, collection, query, where, getDocs} from 'firebase/firestore';
 
 export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
@@ -15,6 +15,16 @@ export default function Profile() {
     const [address, setAddress] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+
+    // Rating and reviews states
+    const [rating, setRating] = useState(0);
+    const [reviewsCount, setReviewsCount] = useState(0);
+    const [reviews, setReviews] = useState([]);
+    const [showReviews, setShowReviews] = useState(false);
+
+    // Favorites states
+    const [favorites, setFavorites] = useState([]);
+    const [favoritesLoading, setFavoritesLoading] = useState(false);
 
     // Store original values for cancel functionality
     const [originalData, setOriginalData] = useState({});
@@ -48,6 +58,12 @@ export default function Profile() {
                     setEmail(data.email || '');
                     setPhone(data.phone || '');
 
+                    // Load favorites
+                    const userFavorites = data.favorites || [];
+                    if (userFavorites.length > 0) {
+                        loadFavorites(userFavorites);
+                    }
+
                     // Store original data for cancel
                     setOriginalData({
                         role: data.role || '',
@@ -60,6 +76,9 @@ export default function Profile() {
                     setError('User profile not found');
                 }
 
+                // Load rating and reviews count
+                await loadRating(userId);
+
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching user data:', err);
@@ -69,7 +88,58 @@ export default function Profile() {
         };
 
         fetchUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Load user rating from reviews
+    const loadRating = async (uid) => {
+        try {
+            const reviewsQuery = query(collection(db, 'reviews'), where('reviewedId', '==', uid));
+            const reviewsSnapshot = await getDocs(reviewsQuery);
+            
+            if (!reviewsSnapshot.empty) {
+                const reviewsData = reviewsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setReviews(reviewsData);
+                
+                const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
+                const avgRating = totalRating / reviewsData.length;
+                setRating(Math.round(avgRating * 10) / 10); // Round to 1 decimal
+                setReviewsCount(reviewsData.length);
+            } else {
+                setReviews([]);
+                setRating(0);
+                setReviewsCount(0);
+            }
+        } catch (err) {
+            console.error('Error loading rating:', err);
+        }
+    };
+
+    // Load favorites data
+    const loadFavorites = async (favoriteIds) => {
+        try {
+            setFavoritesLoading(true);
+            const favoritesData = [];
+            
+            for (const id of favoriteIds) {
+                const userDoc = await getDoc(doc(db, 'users', id));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    favoritesData.push({
+                        id,
+                        name: data.name || 'Unknown',
+                        role: data.role || 'Unknown'
+                    });
+                }
+            }
+            
+            setFavorites(favoritesData);
+        } catch (err) {
+            console.error('Error loading favorites:', err);
+        } finally {
+            setFavoritesLoading(false);
+        }
+    };
 
     // Save updated data to Firebase
     const handleSave = async () => {
@@ -116,6 +186,51 @@ export default function Profile() {
         setError('');
     };
 
+    // Add user to favorites
+    const addToFavorites = async (favoriteId) => {
+        try {
+            const userRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userRef);
+            const currentFavorites = userDoc.data().favorites || [];
+            
+            if (!currentFavorites.includes(favoriteId)) {
+                await updateDoc(userRef, {
+                    favorites: [...currentFavorites, favoriteId]
+                });
+                
+                // Reload favorites
+                loadFavorites([...currentFavorites, favoriteId]);
+                setSuccessMessage('Added to favorites!');
+                setTimeout(() => setSuccessMessage(''), 3000);
+            }
+        } catch (err) {
+            console.error('Error adding to favorites:', err);
+            setError('Failed to add to favorites');
+        }
+    };
+
+    // Remove user from favorites
+    const removeFromFavorites = async (favoriteId) => {
+        try {
+            const userRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userRef);
+            const currentFavorites = userDoc.data().favorites || [];
+            
+            const updatedFavorites = currentFavorites.filter(id => id !== favoriteId);
+            await updateDoc(userRef, {
+                favorites: updatedFavorites
+            });
+            
+            // Reload favorites
+            loadFavorites(updatedFavorites);
+            setSuccessMessage('Removed from favorites!');
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (err) {
+            console.error('Error removing from favorites:', err);
+            setError('Failed to remove from favorites');
+        }
+    };
+
     if (loading) {
         return <div className="page"><p>Loading profile...</p></div>;
     }
@@ -135,6 +250,27 @@ export default function Profile() {
                         <p><strong>Address:</strong> {address || 'Not set'}</p>
                         <p><strong>Email:</strong> {email || 'Not set'}</p>
                         <p><strong>Phone:</strong> {phone || 'Not set'}</p>
+                        <p><strong>Rating:</strong> {rating > 0 ? `${rating} ⭐ (${reviewsCount} reviews)` : 'No reviews yet'}
+                        {reviewsCount > 0 && (
+                            <button 
+                                onClick={() => setShowReviews(!showReviews)}
+                                style={{ marginLeft: '10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 8px', cursor: 'pointer', fontSize: '12px' }}
+                            >
+                                {showReviews ? 'Hide' : 'View'} Reviews
+                            </button>
+                        )}</p>
+                        {showReviews && reviews.length > 0 && (
+                            <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                                <h3>Reviews:</h3>
+                                {reviews.map(review => (
+                                    <div key={review.id} style={{ marginBottom: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '3px', backgroundColor: '#fff' }}>
+                                        <p><strong>Rating:</strong> {'⭐'.repeat(review.rating)}</p>
+                                        <p><strong>Comment:</strong> {review.comment || 'No comment'}</p>
+                                        <p style={{ fontSize: '12px', color: '#666' }}>By: {review.reviewerName || 'Anonymous'}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         <button onClick={() => setIsEditing(true)}>Edit Profile</button>
                     </div>
                 ) : (
@@ -218,6 +354,57 @@ export default function Profile() {
           </div>
         </>
       )}
+
+      {/* Favorites Section */}
+      <hr style={{ margin: '20px 0' }} />
+      <div className="favorites-section" style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+        <h2>My Favorites</h2>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+          Saved workers and clients you want to work with.
+        </p>
+        
+        {/* Add to favorites form */}
+        <div style={{ marginBottom: '20px' }}>
+          <input
+            type="text"
+            placeholder="Enter user ID to add to favorites"
+            id="favoriteId"
+            style={{ padding: '8px', marginRight: '10px', border: '1px solid #ccc', borderRadius: '3px', width: '250px' }}
+          />
+          <button 
+            onClick={() => {
+              const id = document.getElementById('favoriteId').value.trim();
+              if (id) {
+                addToFavorites(id);
+                document.getElementById('favoriteId').value = '';
+              }
+            }}
+            style={{ padding: '8px 15px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+          >
+            Add to Favorites
+          </button>
         </div>
-    );
+
+        {favoritesLoading ? (
+          <p>Loading favorites...</p>
+        ) : favorites.length > 0 ? (
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {favorites.map(fav => (
+              <li key={fav.id} style={{ padding: '10px', border: '1px solid #eee', borderRadius: '5px', marginBottom: '10px', backgroundColor: '#fff' }}>
+                <strong>{fav.name}</strong> ({fav.role})
+                <button 
+                  onClick={() => removeFromFavorites(fav.id)}
+                  style={{ marginLeft: '10px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', padding: '5px 10px', cursor: 'pointer' }}
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No favorites yet. Start adding users you want to work with!</p>
+        )}
+      </div>
+    </div>
+  );
 }
