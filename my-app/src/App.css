@@ -6,7 +6,7 @@
 }
 
 html, body {
-    background-color: #f5f5f5;
+    background-color: #f8f9fa;
     color: #333333;
 
     width: 90%;
@@ -17,11 +17,13 @@ html, body {
 
 }
 
-#root {
 
+root {
+    background-color: #f8f9fa;
 }
 
 .app-container {
+    background-color: #f8f9fa;
 
 }
 
@@ -73,11 +75,12 @@ form {
     gap: 16px;
     max-width: 400px;
     min-width: 300px;
-    background-color: #f5f5f5;
+    background-color: white;
     padding: 16px;
     border-radius: 8px;
 
-    box-shadow: 12px 12px 18px rgba(0, 0, 0, .1);
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, .2),
+    -4px -4px 8px white;
 }
 
 
