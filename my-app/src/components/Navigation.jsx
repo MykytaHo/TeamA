@@ -16,8 +16,8 @@ export default function Navigation({user, onLogout}) {
         }
     };
     return (
-        <nav className="navbar">
-            <div className="nav-container">
+            <nav className="navbar">
+
                 <Link tooltip="TradersConnect" to="/" className="logo-nav-icon"> <img src={logo} alt="TC logo"
                                                                                       style={{
                                                                                           width: '30px',
@@ -25,7 +25,7 @@ export default function Navigation({user, onLogout}) {
                                                                                       }}/></Link>
                 <ul className="nav-menu">
                     <li className="nav-icon">
-                        <Link tooltip="Home" to="/" className="nav-icon"><img src={homeIcon} alt="home icon"
+                        <Link tooltip="Home" to="/" className="nav-link"><img src={homeIcon} alt="home icon"
                                                                               style={{width: '20px'}}/></Link>
                     </li>
 
@@ -46,19 +46,18 @@ export default function Navigation({user, onLogout}) {
                                                                                         }}/></Link>
                     </li>
                     {user && (
-                        <li tooltip="Logout" className="nav-icon">
-                            <Link onClick={handleLogout} to="" className="nav-link"><img src={leaveIcon}
-                                                                                         alt="leave icon"
-                                                                                         className="nav-link"
-                                                                                         style={{
-                                                                                             width: '20px',
-                                                                                             height: '20px'
-                                                                                         }}/>
-                            </Link>
-                        </li>
+                            <li tooltip="Logout" className="nav-icon">
+                                <Link onClick={handleLogout} to="" className="nav-link"><img src={leaveIcon}
+                                                                                             alt="leave icon"
+                                                                                             className="nav-link"
+                                                                                             style={{
+                                                                                                 width: '20px',
+                                                                                                 height: '20px'
+                                                                                             }}/>
+                                </Link>
+                            </li>
                     )}
                 </ul>
-            </div>
-        </nav>
+            </nav>
     );
 }
