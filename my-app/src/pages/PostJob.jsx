@@ -137,14 +137,14 @@ export default function PostJob() {
                 </select>
                 <h4>Enter a short job name</h4>
                 <textarea rows="1" maxLength="40" id={"inputjobname"}
-                          placeholder={"e.g. Leaking tap"} onChange={(event) => setJobName(event.target.value)}/>
+                    placeholder={"e.g. Leaking tap"} onChange={(event) => setJobName(event.target.value)}/>
                 <h4>And a slightly longer job description</h4>
                 <textarea rows="2" id={"inputjobdesc"}
-                          placeholder={"e.g. hot waster tap in bathroom etc...."}
-                          onChange={(event) => setJobDescription(event.target.value)}/>
+                    placeholder={"e.g. hot waster tap in bathroom etc...."}
+                    onChange={(event) => setJobDescription(event.target.value)}/>
                 <h4>What is your budget (€)</h4>
                 <input type="number" min="1" id={"inputjobprice"}
-                       onChange={(event) => setJobPrice(event.target.value)}/>
+                    onChange={(event) => setJobPrice(event.target.value)}/>
                 <h4>Upload an optional image</h4>
 
                 <input

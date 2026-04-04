@@ -177,6 +177,33 @@ export default function Messaging() {
     }
   };
 
+  const addToFavorites = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userDoc = await getDoc(userRef);
+      const currentFavorites = userDoc.data().favorites || [];
+      
+      if (!currentFavorites.includes(userId)) {
+        await updateDoc(userRef, {
+          favorites: [...currentFavorites, userId]
+        });
+        setError("Added to favorites!");
+        setTimeout(() => setError(""), 2000);
+      } else {
+        setError("Already in favorites");
+        setTimeout(() => setError(""), 2000);
+      }
+    } catch (err) {
+      console.error('Error adding to favorites:', err);
+      setError("Failed to add to favorites");
+    }
+  };
+
+  const leaveReview = async (userId) => {
+    // Navigate to leave review page with selected user
+    window.location.href = `/leavereview?user=${userId}`;
+  };
+
   if (loading) {
     return <div className="page">Loading...</div>;
   }
@@ -191,9 +218,25 @@ export default function Messaging() {
         <h2>Users</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
           {users.map((u) => (
-            <button key={u.id} onClick={() => startConversation(u)}>
-              {u.name || u.displayName || u.email || "User"}
-            </button>
+            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => startConversation(u)} style={{ flex: 1 }}>
+                {u.name || u.displayName || u.email || "User"}
+              </button>
+              <button 
+                onClick={() => addToFavorites(u.id)}
+                style={{ padding: "4px 8px", fontSize: "12px" }}
+                title="Add to favorites"
+              >
+                ❤️
+              </button>
+              <button 
+                onClick={() => leaveReview(u.id)}
+                style={{ padding: "4px 8px", fontSize: "12px" }}
+                title="Leave review"
+              >
+                ⭐
+              </button>
+            </div>
           ))}
         </div>
 

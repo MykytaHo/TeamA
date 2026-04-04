@@ -55,6 +55,10 @@ export default function Navigation({user, onLogout}) {
 
 
                     </li>
+
+                    <li className="nav-icon">
+                        <Link tooltip="Leave Review" to="/leavereview" className="nav-link">⭐</Link>
+                    </li>
                     {user && (
                         <li tooltip="Logout" className="nav-icon">
                             <Link onClick={handleLogout} to="" className="nav-link"><img src={leaveIcon}
