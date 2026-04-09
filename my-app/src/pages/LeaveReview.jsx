@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function LeaveReview() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState('');
@@ -34,11 +35,10 @@ export default function LeaveReview() {
                     setSelectedUser(userParam);
                 }
 
-                // Load all users except current
+                // Load all users
                 const usersSnapshot = await getDocs(collection(db, 'users'));
                 const usersList = usersSnapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(user => user.id !== current.uid);
+                    .map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 setUsers(usersList);
                 setLoading(false);
@@ -63,12 +63,18 @@ export default function LeaveReview() {
             setError('');
             setSuccess('');
 
+            console.log('=== SUBMITTING REVIEW ===');
+            console.log('Reviewed User ID (reviewedId):', selectedUser);
+            console.log('Reviewer ID (reviewerId):', currentUser.uid);
+            console.log('Rating:', parseInt(rating));
+            console.log('Comment:', comment.trim());
+
             // Get reviewer name
             const reviewerDoc = await getDoc(doc(db, 'users', currentUser.uid));
             const reviewerName = reviewerDoc.exists() ? reviewerDoc.data().name : 'Anonymous';
 
             // Add review to Firestore
-            await addDoc(collection(db, 'reviews'), {
+            const reviewRef = await addDoc(collection(db, 'reviews'), {
                 reviewedId: selectedUser,
                 reviewerId: currentUser.uid,
                 rating: parseInt(rating),
@@ -76,6 +82,9 @@ export default function LeaveReview() {
                 reviewerName,
                 createdAt: new Date()
             });
+            
+            console.log('✅ Review saved! Document ID:', reviewRef.id);
+            console.log('Now navigate to /profile?user=' + selectedUser + ' to see the review');
 
             // If rating is 5 stars, show favorites modal
             if (parseInt(rating) === 5) {
@@ -84,6 +93,9 @@ export default function LeaveReview() {
                 setShowFavoritesModal(true);
             } else {
                 setSuccess('Review submitted successfully!');
+                setTimeout(() => {
+                    navigate(`/profile?user=${selectedUser}`);
+                }, 2000);
             }
 
             setSelectedUser('');
@@ -118,8 +130,11 @@ export default function LeaveReview() {
             
             setSuccess('Review submitted! User added to favorites ⭐');
             setShowFavoritesModal(false);
+            const reviewedUserId = selectedUserForFavorites?.id;
             setSelectedUserForFavorites(null);
-            setTimeout(() => setSuccess(''), 3000);
+            setTimeout(() => {
+                navigate(`/profile?user=${reviewedUserId}`);
+            }, 1500);
         } catch (err) {
             console.error('Error adding to favorites:', err);
             setError('Failed to add to favorites');
@@ -127,10 +142,13 @@ export default function LeaveReview() {
     };
 
     const skipAddingToFavorites = () => {
+        const reviewedUserId = selectedUserForFavorites?.id;
         setSuccess('Review submitted successfully!');
         setShowFavoritesModal(false);
         setSelectedUserForFavorites(null);
-        setTimeout(() => setSuccess(''), 3000);
+        setTimeout(() => {
+            navigate(`/profile?user=${reviewedUserId}`);
+        }, 1500);
     };
 
     if (loading) {
@@ -225,22 +243,43 @@ export default function LeaveReview() {
                             ))}
                         </select>
                         {selectedUser && (
-                            <button
-                                type="button"
-                                onClick={() => copyToClipboard(selectedUser)}
-                                style={{
-                                    padding: '8px 12px',
-                                    backgroundColor: copiedId === selectedUser ? '#28a745' : '#007bff',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer',
-                                    fontSize: '12px'
-                                }}
-                                title="Copy ID"
-                            >
-                                {copiedId === selectedUser ? '✓ Copied' : '📋 Copy ID'}
-                            </button>
+                            <>
+                                <a
+                                    href={`/profile?user=${selectedUser}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        padding: '8px 12px',
+                                        backgroundColor: '#17a2b8',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        fontSize: '12px',
+                                        textDecoration: 'none',
+                                        display: 'inline-block'
+                                    }}
+                                    title="View Profile"
+                                >
+                                    👤 View Profile
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(selectedUser)}
+                                    style={{
+                                        padding: '8px 12px',
+                                        backgroundColor: copiedId === selectedUser ? '#28a745' : '#007bff',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        fontSize: '12px'
+                                    }}
+                                    title="Copy ID"
+                                >
+                                    {copiedId === selectedUser ? '✓ Copied' : '📋 Copy ID'}
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
