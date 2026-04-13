@@ -88,7 +88,6 @@ function App() {
     setMessage('');
   };
 
-<<<<<<< Updated upstream
   if (loading) return <div className="loading">⏳ Loading...</div>;
 
   if (user && user.emailVerified && userProfile) {
@@ -103,66 +102,10 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
-=======
-      return (
-        <div className="auth-page">
-
-            {/* App name / logo above the card */}
-            <div className="auth-logo">
-                <span className="auth-logo-icon">🔧</span>
-                TradeConnect
-            </div>
-
-            {/* Floating card */}
-            <div className="auth-card">
-
-                <h2 className="auth-heading">
-                    {isLogin ? 'Welcome back' : 'Create your account'}
-                </h2>
-                <p className="auth-subheading">
-                    {isLogin
-                        ? 'Sign in to your TradeConnect account.'
-                        : 'Join TradeConnect — find or offer local services.'}
-                </p>
-
-                {message && <p className="message">{message}</p>}
-
-                <form onSubmit={handleAuth}>
-                    {!isLogin && (
-                        <>
-                            <label>I am a:</label>
-                            <select value={role} onChange={(e) => setRole(e.target.value)}>
-                                <option value="client">Client — I need work done</option>
-                                <option value="supplier">Supplier — I offer services</option>
-                            </select>
-
-                            <input type="text" name="name" placeholder="Full Name" onChange={handleChange} required/>
-                            <input type="tel" name="phone" placeholder="Phone Number" onChange={handleChange} required/>
-                        </>
-                    )}
-
-                    <input type="email" name="email" placeholder="Email" onChange={handleChange} required/>
-                    <input type="password" name="password" placeholder="Password" onChange={handleChange} required/>
-
-                    <button type="submit">
-                        {isLogin ? 'Sign In' : 'Register'}
-                    </button>
-                </form>
-
-                {/* Toggle is now a styled text link instead of a grey button */}
-                <p className="auth-toggle-link" onClick={() => {
-                    setIsLogin(!isLogin);
-                    setMessage('');
-                }}>
-                    {isLogin ? "Don't have an account? Register" : 'Already have an account? Sign in'}
-                </p>
-
-            </div>
->>>>>>> Stashed changes
         </div>
+        <SupplierDocuments />
       </Router>
     );
-<<<<<<< Updated upstream
   }
 
   if (user && !user.emailVerified) {
@@ -178,48 +121,55 @@ function App() {
   }
 
   return (
-    <div className="page auth-page">
-      <h2>{isLogin ? 'Login' : 'Register'}</h2>
+    <div className="auth-page">
+      <div className="auth-logo">
+        <span className="auth-logo-icon">🔧</span>
+        TradeConnect
+      </div>
 
-      {message && <p className="message">{message}</p>}
+      <div className="auth-card">
+        <h2 className="auth-heading">
+          {isLogin ? 'Welcome back' : 'Create your account'}
+        </h2>
+        <p className="auth-subheading">
+          {isLogin
+            ? 'Sign in to your TradeConnect account.'
+            : 'Join TradeConnect — find or offer local services.'}
+        </p>
 
-      <form onSubmit={handleAuth}>
-        {!isLogin && (
-          <>
-            <label>I am a: </label>
-            <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="client">Client</option>
-              <option value="supplier">Supplier</option>
-            </select>
+        {message && <p className="message">{message}</p>}
 
-            <input type="text" name="name" placeholder="Full Name" onChange={handleChange} required />
+        <form onSubmit={handleAuth}>
+          {!isLogin && (
+            <>
+              <label>I am a:</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="client">Client — I need work done</option>
+                <option value="supplier">Supplier — I offer services</option>
+              </select>
 
-            <input type="tel" name="phone" placeholder="Phone Number" onChange={handleChange} required />
-          </>
-        )}
+              <input type="text" name="name" placeholder="Full Name" onChange={handleChange} required/>
+              <input type="tel" name="phone" placeholder="Phone Number" onChange={handleChange} required/>
+            </>
+          )}
 
-        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+          <input type="email" name="email" placeholder="Email" onChange={handleChange} required/>
+          <input type="password" name="password" placeholder="Password" onChange={handleChange} required/>
 
-        <button type="submit">
-          {isLogin ? 'Login' : 'Register'}
-        </button>
-      </form>
+          <button type="submit">
+            {isLogin ? 'Sign In' : 'Register'}
+          </button>
+        </form>
 
-      <button className="toggle-btn" onClick={() => { setIsLogin(!isLogin); setMessage(''); }}>
-        {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
-      </button>
-
+        <p className="auth-toggle-link" onClick={() => {
+          setIsLogin(!isLogin);
+          setMessage('');
+        }}>
+          {isLogin ? "Don't have an account? Register" : 'Already have an account? Sign in'}
+        </p>
+      </div>
     </div>
   );
-  // comment
-}
-//comment
-=======
-    
 }
 
-
->>>>>>> Stashed changes
 export default App;
