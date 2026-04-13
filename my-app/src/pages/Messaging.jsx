@@ -13,6 +13,7 @@ import {
   updateDoc,
   orderBy,
   serverTimestamp,
+  getDocs,
 } from "firebase/firestore";
 
 export default function Messaging() {
@@ -24,6 +25,7 @@ export default function Messaging() {
   const [messageText, setMessageText] = useState("");
   const [users, setUsers] = useState([]);
   const [error, setError] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([]);
 
   const messagesEndRef = useRef(null);
 
@@ -54,33 +56,91 @@ export default function Messaging() {
       },
       () => setError("Failed to load users.")
     );
-
-    const convoQuery = query(
-      collection(db, "conversations"),
-      where("participants", "array-contains", currentUser.uid)
-    );
-
-    const unsubConvos = onSnapshot(
-      convoQuery,
-      (snap) => {
-        const list = snap.docs
-          .map((d) => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-
-        setConversations(list);
-
-        if (!selectedConversation && list.length > 0) {
-          setSelectedConversation(list[0]);
-        }
-      },
-      () => setError("Failed to load conversations.")
-    );
-
     return () => {
       unsubUsers();
-      unsubConvos();
     };
-  }, [currentUser, selectedConversation]);
+    }, [currentUser]);
+useEffect(() => {
+  if (!currentUser || users.length === 0) return;
+
+  const filterUsersByRole = async () => {
+    try {
+      // Get current user's role
+      const userRef = doc(db, "users", currentUser.uid);
+      const userDoc = await getDoc(userRef);
+      const userRole = userDoc.data().role;
+
+      const filtered = [];
+
+      for (const u of users) {
+        if (userRole === "client") {
+          // Get client's job categories
+          const clientJobsQuery = query(
+            collection(db, "jobs"),
+            where("clientId", "==", currentUser.uid)
+          );
+          const jobsSnap = await getDocs(clientJobsQuery);
+          const jobCategories = [...new Set(jobsSnap.docs.map(d => d.data().category))];
+
+          // Show suppliers who tendered for jobs in those categories
+          const tendersQuery = query(
+            collection(db, "tenders"),
+            where("category", "in", jobCategories),
+            where("supplierId", "==", u.id)
+          );
+          const snap = await getDocs(tendersQuery);
+          if (snap.size > 0) filtered.push(u);
+
+        } else if (userRole === "supplier") {
+          // Show clients they have tenders for
+          const tendersQuery = query(
+            collection(db, "tenders"),
+            where("supplierId", "==", currentUser.uid),
+            where("clientId", "==", u.id)
+          );
+          const snap = await getDocs(tendersQuery);
+          if (snap.size > 0) filtered.push(u);
+        }
+      }
+
+      setFilteredUsers(filtered);
+    } catch (err) {
+      console.error("Error filtering users:", err);
+    }
+  };
+
+  filterUsersByRole();
+}, [currentUser, users]);
+
+
+useEffect(() => {
+  if (!currentUser) return;
+
+  const convoQuery = query(
+    collection(db, "conversations"),
+    where("participants", "array-contains", currentUser.uid)
+  );
+
+  const unsubConvos = onSnapshot(
+    convoQuery,
+    (snap) => {
+      const list = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+
+      setConversations(list);
+
+      if (!selectedConversation && list.length > 0) {
+        setSelectedConversation(list[0]);
+      }
+    },
+    () => setError("Failed to load conversations.")
+  );
+
+  return () => {
+    unsubConvos();
+  };
+}, [currentUser, selectedConversation]);
 
   useEffect(() => {
     if (!selectedConversation?.id) {
@@ -125,31 +185,66 @@ export default function Messaging() {
     if (!currentUser || !otherUser?.id) return;
 
     try {
+      const userRef = doc(db, "users", currentUser.uid);
+      const userDoc = await getDoc(userRef);
+      const userRole = userDoc.data().role;
+
       const participants = [currentUser.uid, otherUser.id].sort();
       const conversationId = participants.join("_");
       const conversationRef = doc(db, "conversations", conversationId);
       const snap = await getDoc(conversationRef);
 
-      if (!snap.exists()) {
-        await setDoc(conversationRef, {
-          participants,
-          lastMessage: "",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
+      if (snap.exists()) {
+        setSelectedConversation({ id: conversationId, ...snap.data() });
+        return;
       }
 
-      setSelectedConversation({
-        id: conversationId,
+      let hasPermission = false;
+
+      if (userRole === "client") {
+        const clientJobsQuery = query(
+          collection(db, "jobs"),
+          where("clientId", "==", currentUser.uid)
+        );
+        const jobsSnap = await getDocs(clientJobsQuery);
+        const jobCategories = [...new Set(jobsSnap.docs.map(d => d.data().category))];
+        
+        const tendersQuery = query(
+          collection(db, "tenders"),
+          where("category", "in", jobCategories),
+          where("supplierId", "==", otherUser.id)
+        );
+        const tendersSnap = await getDocs(tendersQuery);
+        hasPermission = tendersSnap.size > 0;
+      } else if (userRole === "supplier") {
+        const tendersQuery = query(
+          collection(db, "tenders"),
+          where("supplierId", "==", currentUser.uid),
+          where("clientId", "==", otherUser.id)
+        );
+        const tendersSnap = await getDocs(tendersQuery);
+        hasPermission = tendersSnap.size > 0;
+      }
+
+      if (!hasPermission) {
+        setError("You don't have permission to message this user.");
+        return;
+      }
+
+      await setDoc(conversationRef, {
         participants,
-        ...(snap.exists() ? snap.data() : {}),
+        lastMessage: "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-    } catch {
+
+      setSelectedConversation({ id: conversationId, participants });
+    } catch (err) {
+      console.error(err);
       setError("Could not start conversation.");
     }
   };
-
-  const sendMessage = async () => {
+    const sendMessage = async () => {
     const text = messageText.trim();
 
     if (!text || !currentUser || !selectedConversation?.id) return;
@@ -217,11 +312,12 @@ export default function Messaging() {
       <aside style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
         <h2>Users</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-          {users.map((u) => (
-            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={() => startConversation(u)} style={{ flex: 1 }}>
-                {u.name || u.displayName || u.email || "User"}
-              </button>
+          {filteredUsers.map((u) => (
+          <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={() => startConversation(u)} style={{ flex: 1 }}>
+              {u.name || u.displayName || u.email || "User"}
+            </button>
+             
               <button 
                 onClick={() => addToFavorites(u.id)}
                 style={{ padding: "4px 8px", fontSize: "12px" }}
@@ -239,6 +335,8 @@ export default function Messaging() {
             </div>
           ))}
         </div>
+       
+
 
         <h2>Conversations</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -321,4 +419,4 @@ export default function Messaging() {
       </section>
     </div>
   );
-}
+  }

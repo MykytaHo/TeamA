@@ -22,7 +22,7 @@ import SearchJobs from "./pages/SearchJobs.jsx";
 import AcceptTender from "./pages/AcceptTender.jsx";
 import LeaveReview from "./pages/LeaveReview.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
-import Messaging from "./pages/Messaging.jsx";
+import Messaging from "./pages/messaging.jsx";
 
 import SearchTraders from './components/SearchTraders';
 import HomeDash from "./pages/HomeDash.jsx";
