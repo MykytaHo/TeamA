@@ -6,6 +6,7 @@ import profileIcon from '../assets/user.svg'
 import leaveIcon from '../assets/leave.svg'
 import logo from '../assets/2-letter-house-logo.png'
 import envelopeIcon from '../assets/message.svg'
+import favicon from '../assets/star.svg'
 
 export default function Navigation({user, onLogout}) {
 
@@ -18,17 +19,16 @@ export default function Navigation({user, onLogout}) {
     };
     return (
         <nav className="navbar">
-            <div className="nav-container">
-                <Link tooltip="TradersConnect" to="/" className="logo-nav-icon"> <img src={logo} alt="TC logo"
+                <Link tooltip="TradersConnect" to="/" className="nav-icon"> <img src={homeIcon} alt="TC logo"
                                                                                       style={{
-                                                                                          width: '30px',
-                                                                                          height: '30px'
+                                                                                          width: '20px',
+                                                                                          height: '20px'
                                                                                       }}/></Link>
                 <ul className="nav-menu">
-                    <li className="nav-icon">
-                        <Link tooltip="Home" to="/" className="nav-icon"><img src={homeIcon} alt="home icon"
-                                                                              style={{width: '20px'}}/></Link>
-                    </li>
+                    {/*<li className="nav-icon">*/}
+                    {/*    <Link tooltip="Home" to="/" className="nav-icon"><img src={homeIcon} alt="home icon"*/}
+                    {/*                                                          style={{width: '20px'}}/></Link>*/}
+                    {/*</li>*/}
 
                     <li className="nav-icon">
                         <Link tooltip="Jobs" to="/jobs" className="nav-link"><img src={jobIcon} alt="job icon"
@@ -57,7 +57,12 @@ export default function Navigation({user, onLogout}) {
                     </li>
 
                     <li className="nav-icon">
-                        <Link tooltip="Leave Review" to="/leavereview" className="nav-link">⭐</Link>
+                        <Link tooltip="Leave Review" to="/leavereview" className="nav-link"><img src={favicon}
+                                                                                                 alt="user icon"
+                                                                                                 style={{
+                                                                                                     width: '20px',
+                                                                                                     height: '20px'
+                                                                                                 }}/></Link>
                     </li>
                     {user && (
                         <li tooltip="Logout" className="nav-icon">
@@ -72,7 +77,7 @@ export default function Navigation({user, onLogout}) {
                         </li>
                     )}
                 </ul>
-            </div>
+
         </nav>
     );
 }

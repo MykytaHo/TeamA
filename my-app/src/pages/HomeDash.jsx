@@ -3,6 +3,7 @@ import { auth, db, storage } from "../firebase.js";
 import { doc, getDoc, collection, setDoc, serverTimestamp, query, orderBy, onSnapshot, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import PostJob from "./PostJob.jsx";
 
 const ClientComponents = () => {
     const [formData, setFormData] = useState({ 
@@ -150,7 +151,7 @@ export default function HomeDash() {
         <>
             {loading && <LoadingScreen/>}
             {!loading && role === "supplier" && <SupplierComponents/>}
-            {!loading && role === "client" && <ClientComponents/>}
+            {!loading && role === "client" && <PostJob/>}
         </>
     );
 }
