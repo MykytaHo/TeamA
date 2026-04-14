@@ -2,7 +2,7 @@ import {useNavigate} from 'react-router-dom';
 import {useState, useEffect} from 'react';
 import {auth, db} from '../firebase';
 import {collection, getDocs, doc, getDoc} from 'firebase/firestore';
-
+ 
 export default function Jobs() {
     const navigate = useNavigate();
     const [jobs, setJobs] = useState([]);
@@ -10,7 +10,7 @@ export default function Jobs() {
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState('');
     const [currentUserRole, setCurrentUserRole] = useState('');
-
+ 
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -18,67 +18,60 @@ export default function Jobs() {
                 if (!user) return;
                 
                 setCurrentUserId(user.uid);
-
+ 
                 // Get current user role
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
                     setCurrentUserRole(userDoc.data().role || '');
                 }
-
+ 
                 // Load jobs
                 const jobsSnapshot = await getDocs(collection(db, 'jobs'));
                 setJobs(jobsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 })));
-
+ 
                 // Load tenders
                 const tendersSnapshot = await getDocs(collection(db, 'tenders'));
                 setTenders(tendersSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 })));
-
+ 
                 setLoading(false);
             } catch (err) {
                 console.error('Error loading jobs:', err);
                 setLoading(false);
             }
         };
-
+ 
         loadData();
     }, []);
-
-    const handlePostJob = () => {
-        navigate('/postjob');
-    };
-
-    const handleSearchJobs = () => {
-        navigate('/search-jobs');
-    };
-
-    const handleSubmitTender = () => {
-        navigate('/tenderjob');
-    };
-
-    const handleAcceptTender = () => {
-        navigate('/accept-tender');
-    };
-
-    const handleViewJob = (jobId) => {
-        navigate(`/job-details?id=${jobId}`);
-    };
-
+ 
+    const handlePostJob = () => navigate('/postjob');
+    const handleSearchJobs = () => navigate('/search-jobs');
+    const handleSubmitTender = () => navigate('/tenderjob');
+    const handleAcceptTender = () => navigate('/accept-tender');
+    const handleViewJob = (jobId) => navigate(`/job-details?id=${jobId}`);
+ 
     if (loading) {
         return <div className="page"><p>Loading jobs...</p></div>;
     }
-
+ 
     return (
-        <div className="page">
-            <h1>Jobs & Tenders</h1>
-
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 40px' }}>
+ 
+            <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Jobs & Tenders</h1>
+ 
             {/* Action Buttons */}
-            <div style={{ marginBottom: '30px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ 
+                marginBottom: '30px', 
+                display: 'flex', 
+                gap: '10px', 
+                flexWrap: 'wrap',
+                justifyContent: 'center'
+            }}>
                 <button 
                     type="button" 
                     onClick={handlePostJob}
@@ -86,7 +79,7 @@ export default function Jobs() {
                 >
                     ➕ Post a New Job
                 </button>
-
+ 
                 <button 
                     type="button" 
                     onClick={handleSearchJobs}
@@ -94,7 +87,7 @@ export default function Jobs() {
                 >
                     🔍 Search Jobs
                 </button>
-
+ 
                 {currentUserRole === 'supplier' && (
                     <button 
                         type="button" 
@@ -104,7 +97,7 @@ export default function Jobs() {
                         📋 Submit Tender
                     </button>
                 )}
-
+ 
                 <button 
                     type="button" 
                     onClick={handleAcceptTender}
@@ -113,12 +106,16 @@ export default function Jobs() {
                     ✅ Accept Tender
                 </button>
             </div>
-
+ 
             {/* Available Jobs Section */}
             <hr style={{ margin: '20px 0' }} />
-            <h2>Available Jobs</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Available Jobs</h2>
             {jobs.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
+                <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+                    gap: '15px' 
+                }}>
                     {jobs.map(job => (
                         <div 
                             key={job.id}
@@ -128,8 +125,6 @@ export default function Jobs() {
                                 padding: '15px',
                                 backgroundColor: '#f9f9f9',
                                 cursor: 'pointer',
-                                transition: 'transform 0.2s',
-                                ':hover': { transform: 'scale(1.05)' }
                             }}
                             onClick={() => handleViewJob(job.id)}
                         >
@@ -161,14 +156,27 @@ export default function Jobs() {
                     ))}
                 </div>
             ) : (
-                <p>No jobs available yet. <button type="button" onClick={handlePostJob} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', textDecoration: 'underline' }}>Post one now!</button></p>
+                <p style={{ textAlign: 'center' }}>
+                    No jobs available yet.{' '}
+                    <button 
+                        type="button" 
+                        onClick={handlePostJob} 
+                        style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                        Post one now!
+                    </button>
+                </p>
             )}
-
+ 
             {/* Active Tenders Section */}
             <hr style={{ margin: '20px 0' }} />
-            <h2>Active Tenders</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Active Tenders</h2>
             {tenders.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
+                <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+                    gap: '15px' 
+                }}>
                     {tenders.map(tender => (
                         <div 
                             key={tender.id}
@@ -191,7 +199,7 @@ export default function Jobs() {
                     ))}
                 </div>
             ) : (
-                <p>No tenders submitted yet.</p>
+                <p style={{ textAlign: 'center' }}>No tenders submitted yet.</p>
             )}
         </div>
     );

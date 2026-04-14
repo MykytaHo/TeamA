@@ -71,14 +71,11 @@
 }
 
 @media screen and (max-width: 768px) {
-  .nav-menu {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .nav-container {
-    flex-direction: column;
-    height: auto;
-    padding: 15px 20px;
-  }
+    .nav-menu {
+        gap: 15px;
+    }
+    .nav-container {
+        height: auto;
+        padding: 15px 20px;
+    }
 }

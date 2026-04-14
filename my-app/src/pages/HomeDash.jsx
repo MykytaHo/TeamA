@@ -17,8 +17,8 @@ const ClientComponents = () => {
 
     useEffect(() => {
         const fetchCategories = async () => {
-        const querySnapshot = await getDocs(collection(db, 'jobCategories'));
-        setCategories(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const querySnapshot = await getDocs(collection(db, 'jobCategories'));
+            setCategories(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         };
         fetchCategories();
     }, []);
@@ -27,7 +27,7 @@ const ClientComponents = () => {
     
     const handleImageChange = (e) => {
         if (e.target.files[0]) {
-        setImageFile(e.target.files[0]);
+            setImageFile(e.target.files[0]);
         }
     };
 
@@ -39,90 +39,98 @@ const ClientComponents = () => {
         setIsSubmitting(true);
 
         try {
-        const newJobRef = doc(collection(db, 'jobList'));
-        let imageUrl = "";
+            const newJobRef = doc(collection(db, 'jobList'));
+            let imageUrl = "";
 
-        if (imageFile) {
-            const imageRef = ref(storage, `jobImages/${newJobRef.id}_${imageFile.name}`);
-            await uploadBytes(imageRef, imageFile);
-            imageUrl = await getDownloadURL(imageRef);
-        }
+            if (imageFile) {
+                const imageRef = ref(storage, `jobImages/${newJobRef.id}_${imageFile.name}`);
+                await uploadBytes(imageRef, imageFile);
+                imageUrl = await getDownloadURL(imageRef);
+            }
 
-        await setDoc(newJobRef, { 
-            jobID: newJobRef.id,
-            jobName: formData.jobName,
-            categoryID: formData.categoryID,
-            description: formData.description,
-            budget: Number(formData.budget),
-            jobImage: imageUrl,
-            clientID: user.uid,
-            createdAt: serverTimestamp(),
-            status: "tendered",
-            tenderCount: 0
-        });
-        
-        setFormData({ jobName: '', categoryID: '', description: '', budget: '' });
-        setImageFile(null);
-        alert('Job posted successfully');
+            await setDoc(newJobRef, { 
+                jobID: newJobRef.id,
+                jobName: formData.jobName,
+                categoryID: formData.categoryID,
+                description: formData.description,
+                budget: Number(formData.budget),
+                jobImage: imageUrl,
+                clientID: user.uid,
+                createdAt: serverTimestamp(),
+                status: "tendered",
+                tenderCount: 0
+            });
+            
+            setFormData({ jobName: '', categoryID: '', description: '', budget: '' });
+            setImageFile(null);
+            alert('Job posted successfully');
         } catch (error) {
-        console.error(error);
+            console.error(error);
         } finally {
-        setIsSubmitting(false);
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div>
-        <form onSubmit={handlePostJob}>
-            <input name="jobName" value={formData.jobName} onChange={handleChange} placeholder="Job Title" required />
-            <select name="categoryID" value={formData.categoryID} onChange={handleChange} required>
-            <option value="" disabled>Select Category</option>
-            {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.category || "Error"}</option>
-            ))}
-            </select>
-
-            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required />
-            <input name="budget" value={formData.budget} onChange={handleChange} placeholder="Budget" type="number" required />
-            
-            <input type="file" accept="image/*" onChange={handleImageChange} required />
-
-            <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Posting...' : 'Post Job'}
-            </button>
-        </form>
+            <form onSubmit={handlePostJob}>
+                <input name="jobName" value={formData.jobName} onChange={handleChange} placeholder="Job Title" required />
+                <select name="categoryID" value={formData.categoryID} onChange={handleChange} required>
+                    <option value="" disabled>Select Category</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.category || "Error"}</option>
+                    ))}
+                </select>
+                <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required />
+                <input name="budget" value={formData.budget} onChange={handleChange} placeholder="Budget" type="number" required />
+                <input type="file" accept="image/*" onChange={handleImageChange} required />
+                <button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Posting...' : 'Post Job'}
+                </button>
+            </form>
         </div>
     );
-    };
+};  // ✅ ClientComponents properly closed
 
-    const SupplierComponents = () => {
+const SupplierComponents = () => {  // ✅ Moved outside ClientComponents
     const [jobs, setJobs] = useState([]);
 
     useEffect(() => {
         const q = query(collection(db, 'jobList'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-        setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
         return () => unsubscribe();
     }, []);
 
     return (
-        <div>
-        {jobs.map(job => (
-            <div key={job.id} style={{ border: "1px solid #ccc", padding: "10px", margin: "10px 0" }}>
-            <h3>{job.jobName} - €{job.budget}</h3>
-            {job.jobImage && <img src={job.jobImage} alt="Job" style={{maxWidth: '200px', borderRadius: '8px'}} />}
-            <p>{job.description}</p>
-            <p>Status: {job.status}</p>
-            <p>Tenders: {job.tenderCount}</p>
-            <button>Apply Now</button>
-            </div>
-        ))}
+        <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '20px',
+            padding: '20px'
+        }}>
+            {jobs.map(job => (
+                <div key={job.id} style={{ 
+                    border: "1px solid #ccc", 
+                    padding: "20px", 
+                    borderRadius: '8px',
+                    backgroundColor: '#fff',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}>
+                    <h3>{job.jobName} - €{job.budget}</h3>
+                    {job.jobImage && <img src={job.jobImage} alt="Job" style={{maxWidth: '200px', borderRadius: '8px'}} />}
+                    <p>{job.description}</p>
+                    <p>Status: {job.status}</p>
+                    <p>Tenders: {job.tenderCount}</p>
+                    <button>Apply Now</button>
+                </div>
+            ))}
         </div>
     );
-};
+};  // ✅ SupplierComponents properly closed
 
-export default function HomeDash() {
+export default function HomeDash() {  // ✅ Moved to top level
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -134,8 +142,8 @@ export default function HomeDash() {
                 user = auth.currentUser;
             }
             if (user) {
-                const userDocSnap = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocSnap);
+                const userDocRef = doc(db, "users", user.uid);  // ✅ Renamed to userDocRef for clarity
+                const userDoc = await getDoc(userDocRef);        // ✅ Pass the ref, not the result
 
                 if (userDoc.exists()) {
                     setRole(userDoc.data().role);
