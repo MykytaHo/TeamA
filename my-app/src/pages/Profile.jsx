@@ -52,13 +52,7 @@ export default function Profile() {
 
                 // Check if viewing another user's profile
                 const userParam = searchParams.get('user');
-                console.log('🔍 DEBUG - URL user param:', userParam);
-                console.log('🔍 DEBUG - searchParams:', searchParams);
-                console.log('🔍 DEBUG - window.location.search:', window.location.search);
-                
                 const profileUserId = userParam || currentUser.uid;
-                
-                console.log('📋 Profile loading for userId:', profileUserId);
                 
                 setUserId(profileUserId);
 
@@ -116,25 +110,12 @@ export default function Profile() {
     // Load user rating from reviews
     const loadRating = async (uid) => {
         try {
-            console.log('=== LOADING REVIEWS ===');
-            console.log('Looking for reviews where reviewedId =', uid);
-            
             const reviewsQuery = query(collection(db, 'reviews'), where('reviewedId', '==', uid));
             const reviewsSnapshot = await getDocs(reviewsQuery);
-            
-            console.log('Found', reviewsSnapshot.docs.length, 'reviews');
-            
+
             if (!reviewsSnapshot.empty) {
                 const reviewsData = reviewsSnapshot.docs.map(doc => {
                     const data = doc.data();
-                    console.log('Review data:', {
-                        reviewedId: data.reviewedId,
-                        reviewerId: data.reviewerId,
-                        reviewerName: data.reviewerName,
-                        rating: data.rating,
-                        comment: data.comment
-                    });
-                    
                     let createdAtFormatted = 'Unknown date';
                     
                     // Handle both Firestore Timestamp and regular Date
@@ -161,14 +142,11 @@ export default function Profile() {
                     };
                 });
                 setReviews(reviewsData);
-                console.log('✅ Reviews loaded successfully:', reviewsData.length, 'reviews');
-                
                 const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
                 const avgRating = totalRating / reviewsData.length;
                 setRating(Math.round(avgRating * 10) / 10);
                 setReviewsCount(reviewsData.length);
             } else {
-                console.log('❌ No reviews found for this user');
                 setReviews([]);
                 setRating(0);
                 setReviewsCount(0);
@@ -301,7 +279,7 @@ export default function Profile() {
 
     return (
         <div className="page">
-            <form>
+            <div>
                 <h1>User Profile {userId !== currentUserId && '(View Only)'}</h1>
 
                 {error && <p style={{color: 'red'}}>{error}</p>}
@@ -425,7 +403,7 @@ export default function Profile() {
                         </div>
                     </form>
                 )}
-            </form>
+            </div>
 
             {/* Supplier Documents Link */}
             {userRole === 'supplier' && (
@@ -459,33 +437,23 @@ export default function Profile() {
                 <>
                     <hr style={{ margin: '20px 0' }} />
                     <div className="favorites-section" style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                        <h2>My Favorites</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h2 style={{ margin: 0 }}>My Favourites</h2>
+                            <a
+                                href="/messaging"
+                                style={{
+                                    padding: '8px 14px', fontSize: '13px',
+                                    backgroundColor: '#2563eb', color: '#fff',
+                                    borderRadius: '6px', textDecoration: 'none', fontWeight: 600
+                                }}
+                            >
+                                + Add from Contacts
+                            </a>
+                        </div>
                         <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
-                            Saved workers and clients you want to work with.
+                            Add favourites using the ❤️ button on the Messaging page, or by visiting a user's profile.
                         </p>
                         
-                        {/* Add to favorites form */}
-                        <div style={{ marginBottom: '20px' }}>
-                            <input
-                                type="text"
-                                placeholder="Enter user ID to add to favorites"
-                                id="favoriteId"
-                                style={{ padding: '8px', marginRight: '10px', border: '1px solid #ccc', borderRadius: '3px', width: '250px' }}
-                            />
-                            <button 
-                                onClick={() => {
-                                    const id = document.getElementById('favoriteId').value.trim();
-                                    if (id) {
-                                        addToFavorites(id);
-                                        document.getElementById('favoriteId').value = '';
-                                    }
-                                }}
-                                style={{ padding: '8px 15px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-                            >
-                                Add to Favorites
-                            </button>
-                        </div>
-
                         {favoritesLoading ? (
                             <p>Loading favorites...</p>
                         ) : favorites.length > 0 ? (
@@ -520,7 +488,9 @@ export default function Profile() {
                                 ))}
                             </ul>
                         ) : (
-                            <p>No favorites yet. Start adding users you want to work with!</p>
+                            <p style={{ color: '#64748b', fontSize: '14px' }}>
+                                No favourites yet. Click <strong>+ Add from Contacts</strong> above to add users you've worked with.
+                            </p>
                         )}
                     </div>
                 </>

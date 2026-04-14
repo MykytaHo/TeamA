@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase.js";
+import { onAuthStateChanged } from "firebase/auth";
 import PostJob from "./PostJob.jsx";
 import { doc, getDoc, collection, query, orderBy, where, onSnapshot, deleteDoc, updateDoc } from "firebase/firestore";
 import LoadingScreen from "../components/LoadingScreen.jsx";
@@ -21,21 +22,26 @@ const SupplierComponents = () => {
     }, []);
 
     useEffect(() => {
-        const user = auth.currentUser;
-        if (!user) return;
-        const q = query(collection(db, 'tenderList'), where('supplierID', '==', user.uid));
-        const unsubscribe = onSnapshot(q, async (snapshot) => {
-            const tenders = await Promise.all(
-                snapshot.docs.map(async (d) => {
-                    const tender = { id: d.id, ...d.data() };
-                    const jobDoc = await getDoc(doc(db, 'jobList', tender.jobID));
-                    tender.jobName = jobDoc.exists() ? jobDoc.data().jobName : 'Unknown Job';
-                    return tender;
-                })
-            );
-            setMyTenders(tenders);
+        let unsubscribeTenders = null;
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            if (!user) return;
+            const q = query(collection(db, 'tenderList'), where('supplierID', '==', user.uid));
+            unsubscribeTenders = onSnapshot(q, async (snapshot) => {
+                const tenders = await Promise.all(
+                    snapshot.docs.map(async (d) => {
+                        const tender = { id: d.id, ...d.data() };
+                        const jobDoc = await getDoc(doc(db, 'jobList', tender.jobID));
+                        tender.jobName = jobDoc.exists() ? jobDoc.data().jobName : 'Unknown Job';
+                        return tender;
+                    })
+                );
+                setMyTenders(tenders);
+            });
         });
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            unsubscribeTenders?.();
+        };
     }, []);
 
     const handleWithdraw = async (tender) => {

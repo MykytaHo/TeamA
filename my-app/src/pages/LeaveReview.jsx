@@ -81,18 +81,12 @@ export default function LeaveReview() {
             setError('');
             setSuccess('');
 
-            console.log('=== SUBMITTING REVIEW ===');
-            console.log('Reviewed User ID (reviewedId):', selectedUser);
-            console.log('Reviewer ID (reviewerId):', currentUser.uid);
-            console.log('Rating:', parseInt(rating));
-            console.log('Comment:', comment.trim());
-
             // Get reviewer name
             const reviewerDoc = await getDoc(doc(db, 'users', currentUser.uid));
             const reviewerName = reviewerDoc.exists() ? reviewerDoc.data().name : 'Anonymous';
 
             // Add review to Firestore
-            const reviewRef = await addDoc(collection(db, 'reviews'), {
+            await addDoc(collection(db, 'reviews'), {
                 reviewedId: selectedUser,
                 reviewerId: currentUser.uid,
                 rating: parseInt(rating),
@@ -101,9 +95,6 @@ export default function LeaveReview() {
                 createdAt: new Date()
             });
             
-            console.log('✅ Review saved! Document ID:', reviewRef.id);
-            console.log('Now navigate to /profile?user=' + selectedUser + ' to see the review');
-
             // If rating is 5 stars, show favorites modal
             if (parseInt(rating) === 5) {
                 const selectedUserData = users.find(u => u.id === selectedUser);

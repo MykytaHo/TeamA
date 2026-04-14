@@ -26,14 +26,14 @@ export default function Jobs() {
                 }
  
                 // Load jobs
-                const jobsSnapshot = await getDocs(collection(db, 'jobs'));
+                const jobsSnapshot = await getDocs(collection(db, 'jobList'));
                 setJobs(jobsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 })));
- 
+
                 // Load tenders
-                const tendersSnapshot = await getDocs(collection(db, 'tenders'));
+                const tendersSnapshot = await getDocs(collection(db, 'tenderList'));
                 setTenders(tendersSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
@@ -53,7 +53,7 @@ export default function Jobs() {
     const handleSearchJobs = () => navigate('/searchjobs');
     const handleSubmitTender = () => navigate('/tenderjob');
     const handleAcceptTender = () => navigate('/accepttender');
-    const handleViewJob = (jobId) => navigate(`/job-details?id=${jobId}`);
+    const handleViewJob = (jobId) => navigate(`/job/${jobId}`);
  
     if (loading) {
         return <div className="page"><p>Loading jobs...</p></div>;
@@ -128,7 +128,7 @@ export default function Jobs() {
                             }}
                             onClick={() => handleViewJob(job.id)}
                         >
-                            <h3>{job.title}</h3>
+                            <h3>{job.jobName}</h3>
                             <p><strong>Category:</strong> {job.category || 'N/A'}</p>
                             <p><strong>Location:</strong> {job.location || 'N/A'}</p>
                             <p><strong>Budget:</strong> €{job.budget || 'Negotiable'}</p>
