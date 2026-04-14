@@ -126,7 +126,7 @@ export default function PostJob() {
                 <h1>Post A Job</h1>
 
                 <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
-                    <option value={""}>I need.....</option>
+                    <option value={""}>Select a category...</option>
                     {categories.map((cat) => (
                         <option key={cat.id} value={cat.category}>
                             {cat.category}
@@ -140,7 +140,7 @@ export default function PostJob() {
                     placeholder={"e.g. Leaking tap"} onChange={(event) => setJobName(event.target.value)}/>
                 <h4>And a slightly longer job description</h4>
                 <textarea rows="2" id={"inputjobdesc"}
-                    placeholder={"e.g. hot waster tap in bathroom etc...."}
+                    placeholder={"e.g. Hot water tap in bathroom, etc."}
                     onChange={(event) => setJobDescription(event.target.value)}/>
                 <h4>What is your budget (€)</h4>
                 <input type="number" min="1" id={"inputjobprice"}

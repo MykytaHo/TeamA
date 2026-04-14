@@ -309,7 +309,7 @@ export default function Profile() {
 
                 {!isEditing ? (
                     <div className="profile-view">
-                        <p><strong>Role:</strong> {userRole || 'Not set'}</p>
+                        <p><strong>Role:</strong> {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'Not set'}</p>
                         <p><strong>Name:</strong> {name || 'Not set'}</p>
                         <p><strong>Address:</strong> {address || 'Not set'}</p>
                         <p><strong>Email:</strong> {email || 'Not set'}</p>
@@ -493,7 +493,7 @@ export default function Profile() {
                                 {favorites.map(fav => (
                                     <li key={fav.id} style={{ padding: '10px', border: '1px solid #eee', borderRadius: '5px', marginBottom: '10px', backgroundColor: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
-                                            <a href={`/profile?user=${fav.id}`} style={{ color: '#007bff', textDecoration: 'none', cursor: 'pointer' }}><strong>{fav.name}</strong></a> ({fav.role})
+                                            <a href={`/profile?user=${fav.id}`} style={{ color: '#007bff', textDecoration: 'none', cursor: 'pointer' }}><strong>{fav.name}</strong></a> ({fav.role ? fav.role.charAt(0).toUpperCase() + fav.role.slice(1) : ''})
                                             {fav.email && <p style={{fontSize: '12px', color: '#666', margin: '5px 0 0 0'}}>{fav.email}</p>}
                                         </div>
                                         <div style={{ display: 'flex', gap: '5px' }}>

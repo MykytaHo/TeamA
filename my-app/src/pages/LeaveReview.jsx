@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, addDoc, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function LeaveReview() {
     const [searchParams] = useSearchParams();
@@ -16,7 +16,6 @@ export default function LeaveReview() {
     const [currentUser, setCurrentUser] = useState(null);
     const [showFavoritesModal, setShowFavoritesModal] = useState(false);
     const [selectedUserForFavorites, setSelectedUserForFavorites] = useState(null);
-    const [copiedId, setCopiedId] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,12 +34,31 @@ export default function LeaveReview() {
                     setSelectedUser(userParam);
                 }
 
-                // Load all users
-                const usersSnapshot = await getDocs(collection(db, 'users'));
-                const usersList = usersSnapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                setUsers(usersList);
+                // Load only users connected through tenders
+                const currentUserDoc = await getDoc(doc(db, 'users', current.uid));
+                const role = currentUserDoc.data()?.role;
+
+                const tendersSnap = await getDocs(
+                    query(
+                        collection(db, 'tenderList'),
+                        where(role === 'client' ? 'clientID' : 'supplierID', '==', current.uid)
+                    )
+                );
+
+                const connectedIds = [...new Set(
+                    tendersSnap.docs.map(d =>
+                        role === 'client' ? d.data().supplierID : d.data().clientID
+                    )
+                )];
+
+                const connectedUsers = await Promise.all(
+                    connectedIds.map(async id => {
+                        const userDoc = await getDoc(doc(db, 'users', id));
+                        return userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } : null;
+                    })
+                );
+
+                setUsers(connectedUsers.filter(Boolean));
                 setLoading(false);
             } catch (err) {
                 console.error('Error loading data:', err);
@@ -108,12 +126,6 @@ export default function LeaveReview() {
             console.error('Error submitting review:', err);
             setError('Failed to submit review. Please try again.');
         }
-    };
-
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
-        setCopiedId(text);
-        setTimeout(() => setCopiedId(null), 2000);
     };
 
     const addToFavorites = async (userId) => {
@@ -238,48 +250,28 @@ export default function LeaveReview() {
                             <option value="">Choose a user...</option>
                             {users.map(user => (
                                 <option key={user.id} value={user.id}>
-                                    {user.name} ({user.role}) - ID: {user.id}
+                                    {user.name} ({user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''})
                                 </option>
                             ))}
                         </select>
                         {selectedUser && (
-                            <>
-                                <a
-                                    href={`/profile?user=${selectedUser}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        padding: '8px 12px',
-                                        backgroundColor: '#17a2b8',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        textDecoration: 'none',
-                                        display: 'inline-block'
-                                    }}
-                                    title="View Profile"
-                                >
-                                    👤 View Profile
-                                </a>
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(selectedUser)}
-                                    style={{
-                                        padding: '8px 12px',
-                                        backgroundColor: copiedId === selectedUser ? '#28a745' : '#007bff',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px'
-                                    }}
-                                    title="Copy ID"
-                                >
-                                    {copiedId === selectedUser ? '✓ Copied' : '📋 Copy ID'}
-                                </button>
-                            </>
+                            <a
+                                href={`/profile?user=${selectedUser}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    padding: '8px 12px',
+                                    backgroundColor: '#2563eb',
+                                    color: '#fff',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    textDecoration: 'none',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                View Profile
+                            </a>
                         )}
                     </div>
                 </div>

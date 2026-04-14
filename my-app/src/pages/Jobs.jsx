@@ -50,9 +50,9 @@ export default function Jobs() {
     }, []);
  
     const handlePostJob = () => navigate('/postjob');
-    const handleSearchJobs = () => navigate('/search-jobs');
+    const handleSearchJobs = () => navigate('/searchjobs');
     const handleSubmitTender = () => navigate('/tenderjob');
-    const handleAcceptTender = () => navigate('/accept-tender');
+    const handleAcceptTender = () => navigate('/accepttender');
     const handleViewJob = (jobId) => navigate(`/job-details?id=${jobId}`);
  
     if (loading) {
