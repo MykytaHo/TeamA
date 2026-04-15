@@ -1,128 +1,133 @@
 import React, { useState, useEffect } from "react";
-import { auth, db, storage } from "../firebase.js"; 
-import { doc, getDoc, collection, setDoc, serverTimestamp, query, orderBy, onSnapshot, getDocs } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase.js";
+import PostJob from "./PostJob.jsx";
+import { doc, getDoc, collection, query, orderBy, where, onSnapshot, deleteDoc, updateDoc } from "firebase/firestore";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 
-const ClientComponents = () => {
-    const [formData, setFormData] = useState({ 
-        jobName: '', 
-        categoryID: '', 
-        description: '', 
-        budget: '' 
-    });
-    const [imageFile, setImageFile] = useState(null);
-    const [categories, setCategories] = useState([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-        const querySnapshot = await getDocs(collection(db, 'jobCategories'));
-        setCategories(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        };
-        fetchCategories();
-    }, []);
-
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-    
-    const handleImageChange = (e) => {
-        if (e.target.files[0]) {
-        setImageFile(e.target.files[0]);
-        }
-    };
-
-    const handlePostJob = async (e) => {
-        e.preventDefault();
-        const user = auth.currentUser;
-        if (!user) return;
-
-        setIsSubmitting(true);
-
-        try {
-        const newJobRef = doc(collection(db, 'jobList'));
-        let imageUrl = "";
-
-        if (imageFile) {
-            const imageRef = ref(storage, `jobImages/${newJobRef.id}_${imageFile.name}`);
-            await uploadBytes(imageRef, imageFile);
-            imageUrl = await getDownloadURL(imageRef);
-        }
-
-        await setDoc(newJobRef, { 
-            jobID: newJobRef.id,
-            jobName: formData.jobName,
-            categoryID: formData.categoryID,
-            description: formData.description,
-            budget: Number(formData.budget),
-            jobImage: imageUrl,
-            clientID: user.uid,
-            createdAt: serverTimestamp(),
-            status: "tendered",
-            tenderCount: 0
-        });
-        
-        setFormData({ jobName: '', categoryID: '', description: '', budget: '' });
-        setImageFile(null);
-        alert('Job posted successfully');
-        } catch (error) {
-        console.error(error);
-        } finally {
-        setIsSubmitting(false);
-        }
-    };
-
-    return (
-        <div>
-        <form onSubmit={handlePostJob}>
-            <input name="jobName" value={formData.jobName} onChange={handleChange} placeholder="Job Title" required />
-            <select name="categoryID" value={formData.categoryID} onChange={handleChange} required>
-            <option value="" disabled>Select Category</option>
-            {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.category || "Error"}</option>
-            ))}
-            </select>
-
-            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required />
-            <input name="budget" value={formData.budget} onChange={handleChange} placeholder="Budget" type="number" required />
-            
-            <input type="file" accept="image/*" onChange={handleImageChange} required />
-
-            <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Posting...' : 'Post Job'}
-            </button>
-        </form>
-        </div>
-    );
-    };
-
-    const SupplierComponents = () => {
+const SupplierComponents = () => {
+    const navigate = useNavigate();
     const [jobs, setJobs] = useState([]);
+    const [myTenders, setMyTenders] = useState([]);
+    const [withdrawMessage, setWithdrawMessage] = useState('');
 
     useEffect(() => {
         const q = query(collection(db, 'jobList'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-        setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setJobs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
         return () => unsubscribe();
     }, []);
 
+    useEffect(() => {
+        const user = auth.currentUser;
+        if (!user) return;
+        const q = query(collection(db, 'tenderList'), where('supplierID', '==', user.uid));
+        const unsubscribe = onSnapshot(q, async (snapshot) => {
+            const tenders = await Promise.all(
+                snapshot.docs.map(async (d) => {
+                    const tender = { id: d.id, ...d.data() };
+                    const jobDoc = await getDoc(doc(db, 'jobList', tender.jobID));
+                    tender.jobName = jobDoc.exists() ? jobDoc.data().jobName : 'Unknown Job';
+                    return tender;
+                })
+            );
+            setMyTenders(tenders);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const handleWithdraw = async (tender) => {
+        if (!window.confirm(`Withdraw your tender for "${tender.jobName}"?`)) return;
+        try {
+            await deleteDoc(doc(db, 'tenderList', tender.id));
+            const jobRef = doc(db, 'jobList', tender.jobID);
+            const jobDoc = await getDoc(jobRef);
+            if (jobDoc.exists()) {
+                const current = jobDoc.data().tenderCount || 1;
+                await updateDoc(jobRef, { tenderCount: Math.max(0, current - 1) });
+            }
+            setWithdrawMessage(`Tender for "${tender.jobName}" withdrawn.`);
+            setTimeout(() => setWithdrawMessage(''), 3000);
+        } catch (err) {
+            console.error('Error withdrawing tender:', err);
+            setWithdrawMessage('Failed to withdraw tender.');
+        }
+    };
+
     return (
-        <div>
-        {jobs.map(job => (
-            <div key={job.id} style={{ border: "1px solid #ccc", padding: "10px", margin: "10px 0" }}>
-            <h3>{job.jobName} - €{job.budget}</h3>
-            {job.jobImage && <img src={job.jobImage} alt="Job" style={{maxWidth: '200px', borderRadius: '8px'}} />}
-            <p>{job.description}</p>
-            <p>Status: {job.status}</p>
-            <p>Tenders: {job.tenderCount}</p>
-            <button>Apply Now</button>
+        <div className="page">
+            {/* My Tenders */}
+            {myTenders.length > 0 && (
+                <div style={{ marginBottom: '32px' }}>
+                    <h2>My Tenders</h2>
+                    {withdrawMessage && (
+                        <p style={{ color: '#166534', background: '#dcfce7', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px' }}>
+                            {withdrawMessage}
+                        </p>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {myTenders.map(tender => (
+                            <div key={tender.id} style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px',
+                                padding: '14px 18px', flexWrap: 'wrap', gap: '10px'
+                            }}>
+                                <div>
+                                    <p style={{ margin: 0, fontWeight: 600, color: '#0f172a' }}>{tender.jobName}</p>
+                                    <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>
+                                        Your quote: <strong style={{ color: '#0f172a' }}>€{tender.tenderAmount}</strong>
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleWithdraw(tender)}
+                                    style={{
+                                        padding: '6px 14px', fontSize: '13px',
+                                        backgroundColor: '#fee2e2', color: '#dc2626',
+                                        border: '1px solid #fca5a5', borderRadius: '6px',
+                                        cursor: 'pointer', fontWeight: 600
+                                    }}
+                                >
+                                    Withdraw Tender
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Available Jobs */}
+            <h2>Available Jobs</h2>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '20px',
+            }}>
+                {jobs.map(job => (
+                    <div key={job.id} style={{
+                        border: "1px solid #e2e8f0",
+                        padding: "20px",
+                        borderRadius: '10px',
+                        backgroundColor: '#fff',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
+                    }}>
+                        <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>{job.jobName} — €{job.budget}</h3>
+                        {job.jobImage && <img src={job.jobImage} alt="Job" style={{maxWidth: '100%', borderRadius: '8px', marginBottom: '8px'}} />}
+                        <p style={{ fontSize: '14px', color: '#475569', margin: '0 0 6px' }}>{job.description}</p>
+                        <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 4px' }}>
+                            Status: {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Posted'}
+                        </p>
+                        <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 12px' }}>Tenders: {job.tenderCount || 0}</p>
+                        <button onClick={() => navigate(`/tenderjob?jobId=${job.id}`)}>Apply Now</button>
+                    </div>
+                ))}
             </div>
-        ))}
         </div>
     );
 };
 
-export default function HomeDash() {
+export default function HomeDash() {  // ✅ Moved to top level
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -134,8 +139,8 @@ export default function HomeDash() {
                 user = auth.currentUser;
             }
             if (user) {
-                const userDocSnap = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocSnap);
+                const userDocRef = doc(db, "users", user.uid);  // ✅ Renamed to userDocRef for clarity
+                const userDoc = await getDoc(userDocRef);        // ✅ Pass the ref, not the result
 
                 if (userDoc.exists()) {
                     setRole(userDoc.data().role);
@@ -150,7 +155,7 @@ export default function HomeDash() {
         <>
             {loading && <LoadingScreen/>}
             {!loading && role === "supplier" && <SupplierComponents/>}
-            {!loading && role === "client" && <ClientComponents/>}
+            {!loading && role === "client" && <PostJob/>}
         </>
     );
 }

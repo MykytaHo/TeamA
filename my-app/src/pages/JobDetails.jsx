@@ -259,7 +259,7 @@ export default function JobDetails() {
                 <p><strong>Category:</strong> {job.jobCategory}</p>
                 <p><strong>Description:</strong> {job.jobDescription}</p>
                 <p><strong>Budget:</strong> €{job.budget}</p>
-                <p><strong>Status:</strong> {job.status || 'Posted'}</p>
+                <p><strong>Status:</strong> {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Posted'}</p>
                 <p><strong>Tenders:</strong> {job.tenderCount || 0}</p>
             </div>
 
@@ -288,7 +288,7 @@ export default function JobDetails() {
                             </button>
                         </p>
                         <p><strong>Email:</strong> {client.email}</p>
-                        <p><strong>Role:</strong> {client.role}</p>
+                        <p><strong>Role:</strong> {client.role ? client.role.charAt(0).toUpperCase() + client.role.slice(1) : ''}</p>
                         {canLeaveReview(client.id) && (
                             <button
                                 onClick={() => handleLeaveReview(client)}
@@ -324,7 +324,7 @@ export default function JobDetails() {
                             </button>
                         </p>
                         <p><strong>Email:</strong> {supplier.email}</p>
-                        <p><strong>Role:</strong> {supplier.role}</p>
+                        <p><strong>Role:</strong> {supplier.role ? supplier.role.charAt(0).toUpperCase() + supplier.role.slice(1) : ''}</p>
                         {canLeaveReview(supplier.id) && (
                             <button
                                 onClick={() => handleLeaveReview(supplier)}

@@ -104,7 +104,7 @@ function App() {
         return (
             <>
                 <Router>
-                    <Navigation user={user} onLogout={handleLogout}/>
+                    <Navigation user={user} userProfile={userProfile} onLogout={handleLogout}/>
                     <div className="app-container">
                         <Routes>
                             <Route path="/" element={<HomeDash/>}/>
