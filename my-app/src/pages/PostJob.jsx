@@ -17,6 +17,38 @@ export default function PostJob() {
     const [categories, setCategories] = useState([]);
     const [imageFile, setImageFile] = useState(null);
     const user = auth.currentUser;
+    const [jobCounty, setJobCounty] = useState("");
+    const [jobTown, setJobTown] = useState("");
+
+    const locationData = {
+        "Dublin": ["Dublin City", "Dun Laoghaire", "Malahide", "Swords"],
+        "Cork": ["Cork City", "Bandon", "Kinsale", "Youghal"],
+        "Galway": ["Galway City", "Athenry", "Ballinasloe", "Clarinbridge"],
+        "Limerick": ["Limerick City", "Newcastle West", "Adare"],
+        "Waterford": ["Waterford City", "Dunmore East", "Lismore"],
+        "Tipperary": ["Tipperary", "Clonmel", "Nenagh"],
+        "Kilkenny": ["Kilkenny City", "Thomastown", "Graiguenamanagh"],
+        "Carlow": ["Carlow", "Bagenalstown"],
+        "Wexford": ["Wexford Town", "Enniscorthy", "Gorey"],
+        "Wicklow": ["Wicklow Town", "Greystones", "Arklow"],
+        "Kildare": ["Kildare", "Maynooth", "Naas", "Athy"],
+        "Laois": ["Portlaoise", "Portarlington", "Rathdowney", "Mountmellick"],
+        "Offaly": ["Tullamore", "Birr", "Edenderry"],
+        "Westmeath": ["Athlone", "Mullingar", "Moate"],
+        "Longford": ["Longford", "Edgeworthstown", "Granard"],  
+        "Roscommon": ["Roscommon", "Castlerea", "Boyle"],
+        "Sligo": ["Sligo Town", "Enniscrone", "Tubbercurry"],
+        "Leitrim": ["Carrick-on-Shannon", "Ballinamore", "Dromahair"],
+        "Monaghan": ["Monaghan Town", "Clones", "Castleblayney"],
+        "Cavan": ["Cavan Town", "Bailieborough", "Cootehill"],
+        "Donegal": ["Donegal Town", "Letterkenny", "Bundoran"],
+        "Mayo": ["Castlebar", "Westport", "Ballina"],
+        "Clare": ["Ennis", "Shannon", "Kilrush"],
+        "Kerry": ["Tralee", "Killarney", "Dingle"],
+        "Louth": ["Drogheda", "Dundalk", "Ardee"],
+        "Meath": ["Navan", "Trim", "Kells"],
+       
+    };
 
     useEffect(() => {
         getJobCategories();
@@ -56,6 +88,8 @@ export default function PostJob() {
         let result = confirm("Are you sure you want to reset the form?");
         if (result) {
             setJobCategory("");
+            setJobCounty("");
+            setJobTown("");
             setJobName("");
             setJobPrice(0);
             setJobDescription("");
@@ -99,9 +133,10 @@ export default function PostJob() {
             const jobsList = collection(db, "jobList");
             const newJob = {
                 status: "posted",
-                jobName: jobName,
+                title: jobName,
                 budget: Number(jobPrice),
-                categoryID: jobCategory,
+                category: jobCategory,
+                location: `${jobTown}, ${jobCounty}`,
                 description: jobDescription,
                 clientID: user.uid,
                 createdAt: serverTimestamp(),
@@ -138,6 +173,39 @@ export default function PostJob() {
                 <h4>Enter a short job name</h4>
                 <textarea rows="1" maxLength="40" id={"inputjobname"}
                     placeholder={"e.g. Leaking tap"} onChange={(event) => setJobName(event.target.value)}/>
+                <h4>Where is the job located?</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                        <label><strong>County:</strong></label>
+                        <select 
+                            value={jobCounty} 
+                            onChange={(e) => {
+                                setJobCounty(e.target.value);
+                                setJobTown(""); // Reset town when county changes
+                            }}
+                            style={{ width: '100%', padding: '8px' }}
+                        >
+                            <option value="">Select County...</option>
+                            {Object.keys(locationData).map(county => (
+                                <option key={county} value={county}>{county}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label><strong>Town:</strong></label>
+                        <select 
+                            value={jobTown}
+                            onChange={(e) => setJobTown(e.target.value)}
+                            disabled={!jobCounty}
+                            style={{ width: '100%', padding: '8px' }}
+                        >
+                            <option value="">Select Town...</option>
+                            {jobCounty && locationData[jobCounty].map(town => (
+                                <option key={town} value={town}>{town}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
                 <h4>And a slightly longer job description</h4>
                 <textarea rows="2" id={"inputjobdesc"}
                     placeholder={"e.g. hot waster tap in bathroom etc...."}

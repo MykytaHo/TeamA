@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
+import { useSearchParams } from 'react-router-dom';
 import {
   collection,
   addDoc,
@@ -28,15 +29,21 @@ export default function Messaging() {
   const [filteredUsers, setFilteredUsers] = useState([]);
 
   const messagesEndRef = useRef(null);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user || null);
       setLoading(false);
+      
+      // Request notification permission
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
     });
 
-    return () => unsub();
-  }, []);
+  return () => unsub();
+}, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -154,16 +161,41 @@ useEffect(() => {
     );
 
     const unsub = onSnapshot(
-      messagesQuery,
-      (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setMessages(list);
-      },
-      () => setError("Failed to load messages.")
-    );
+  messagesQuery,
+  (snap) => {
+    const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    
+    // Show notification for new messages from others
+    if (messages.length > 0 && list.length > messages.length) {
+      const newMessage = list[list.length - 1];
+      if (newMessage.senderId !== currentUser.uid && 'Notification' in window && Notification.permission === 'granted') {
+        const senderName = getName(newMessage.senderId);
+        new Notification('New message', {
+          body: `${senderName}: ${newMessage.text}`,
+          icon: '/logo.png' // optional
+        });
+      }
+    }
+    
+    setMessages(list);
+  },
+  () => setError("Failed to load messages.")
+);
 
     return () => unsub();
   }, [selectedConversation]);
+
+  useEffect(() => {
+    if (!currentUser || !searchParams.has('clientID')) return;
+
+    const clientID = searchParams.get('clientID');
+    const hasTenderId = searchParams.has('tenderId');
+    const userToMessage = users.find(u => u.id === clientID);
+    
+    if (userToMessage) {
+      startConversation(userToMessage, hasTenderId);  // ← Pass hasTenderId as true
+    }
+  }, [currentUser, searchParams, users]);
 
   const getName = (uid) => {
     if (uid === currentUser?.uid) return "You";
@@ -181,7 +213,7 @@ useEffect(() => {
     return others.map(getName).join(", ");
   };
 
-  const startConversation = async (otherUser) => {
+  const startConversation = async (otherUser, skipPermissionCheck = false) => {
     if (!currentUser || !otherUser?.id) return;
 
     try {
@@ -199,8 +231,9 @@ useEffect(() => {
         return;
       }
 
-      let hasPermission = false;
+      let hasPermission = skipPermissionCheck; // Skip if coming from tender
 
+      if (!skipPermissionCheck) {
       if (userRole === "client") {
         const clientJobsQuery = query(
           collection(db, "jobs"),
@@ -225,8 +258,9 @@ useEffect(() => {
         const tendersSnap = await getDocs(tendersQuery);
         hasPermission = tendersSnap.size > 0;
       }
+      }
 
-      if (!hasPermission) {
+      if (!hasPermission && !skipPermissionCheck ) {
         setError("You don't have permission to message this user.");
         return;
       }

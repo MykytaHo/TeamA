@@ -69,23 +69,27 @@ export default function Jobs() {
         navigate('/tenderjob');
     };
 
-    const handleAcceptTender = () => {
-        navigate('/accepttender');
-    };
+  
 
-    const handleAcceptTenderClick = async (tenderId, jobId) => {
+   const handleAcceptTenderClick = async (tenderId, jobId) => {
     try {
-        // Update tender status to accepted
+        // Delete all competing tenders for the same job
+        const competingTenders = tenders.filter(t => t.jobID === jobId && t.id !== tenderId);
+        for (const tender of competingTenders) {
+            await deleteDoc(doc(db, 'tenderList', tender.id));
+        }
+
+        // Update the winning tender status to accepted
         await updateDoc(doc(db, 'tenderList', tenderId), {
             status: 'accepted'
         });
 
-        // Update job status
+        // Update job status to contracted
         await updateDoc(doc(db, 'jobList', jobId), {
-            status: 'accepted'
+            status: 'contracted'
         });
 
-        alert('Tender accepted!');
+        alert('Tender accepted! Other competing tenders have been deleted.');
     } catch (err) {
         console.error('Error accepting tender:', err);
         setError('Failed to accept tender');
@@ -110,6 +114,20 @@ export default function Jobs() {
         }
     };
 
+    const handleDeleteTender = async (tenderId) => {
+    try {
+        await deleteDoc(doc(db, 'tenderList', tenderId));
+        alert('Tender deleted!');
+    } catch (err) {
+        console.error('Error deleting tender:', err);
+        setError('Failed to delete tender');
+    }
+};
+
+    const handleEditTender = (tender) => {
+        navigate('/tenderjob', { state: { editTender: tender } });
+    };
+
     return (
         <div className="page">
             <h1>Jobs & Tenders</h1>
@@ -126,25 +144,21 @@ export default function Jobs() {
                             ➕ Post a New Job
                         </button>
 
-                        <button 
-                            type="button" 
-                            onClick={handleSearchJobs}
-                            style={{ backgroundColor: '#007bff', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                        >
-                            🔍 Search Jobs
-                        </button>
+                        
 
-                        <button 
-                            type="button" 
-                            onClick={handleAcceptTender}
-                            style={{ backgroundColor: '#ffc107', color: '#000', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                        >
-                            ✅ Accept Tender
-                        </button>
                     </>
                 )}
 
-                {currentUserRole === 'supplier' && (
+            {currentUserRole === 'supplier' && (
+                <>
+                    <button 
+                        type="button" 
+                        onClick={handleSearchJobs}
+                        style={{ backgroundColor: '#007bff', color: '#fff', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                    >
+                        🔍 Search Jobs
+                    </button>
+
                     <button 
                         type="button" 
                         onClick={handleSubmitTender}
@@ -152,7 +166,8 @@ export default function Jobs() {
                     >
                         📋 Submit Tender
                     </button>
-                )}
+                </>
+            )}
             </div>
             {/* Available Jobs Section - Only for Clients */}
             {currentUserRole === 'client' && (
@@ -298,39 +313,130 @@ export default function Jobs() {
                 </>
             )}
 
-            {/* Active Tenders Section */}
+            {/* Active Tenders Section - Only for Suppliers */}
             {currentUserRole === 'supplier' && (
-            <>
-                <hr style={{ margin: '20px 0' }} />
-                <h2>Active Tenders</h2>
-                {tenders.filter(tender => tender.supplierID === currentUserId).length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
-                        {tenders.filter(tender => tender.supplierID === currentUserId).map(tender => (
-                            <div 
-                                key={tender.id}
-                                style={{
-                                    border: '2px solid #17a2b8',
-                                    borderRadius: '8px',
-                                    padding: '15px',
-                                    backgroundColor: '#f0f8ff'
-                                }}
-                            >
-                                <h3>{tender.jobTitle}</h3>
-                                <p><strong>Supplier:</strong> {tender.supplierName || 'Anonymous'}</p>
-                                <p><strong>Category:</strong> {tender.category || 'N/A'}</p>
-                                <p><strong>Quote:</strong> €{tender.quote || 'N/A'}</p>
-                                <p style={{ fontSize: '14px', color: '#666' }}>{tender.description?.substring(0, 100)}...</p>
-                                <p style={{ fontSize: '12px', color: '#999' }}>
-                                    Submitted: {tender.createdAt ? new Date(tender.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p>No tenders submitted yet.</p>
-                )}
+                <>
+                    <hr style={{ margin: '20px 0' }} />
+                    <h2>Active Tenders</h2>
+                    {tenders.filter(tender => tender.supplierID === currentUserId && tender.status !== 'accepted').length > 0 ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
+                            {tenders.filter(tender => tender.supplierID === currentUserId && tender.status !== 'accepted').map(tender => (
+                                <div 
+                                    key={tender.id}
+                                    style={{
+                                        border: '2px solid #17a2b8',
+                                        borderRadius: '8px',
+                                        padding: '15px',
+                                        backgroundColor: '#f0f8ff'
+                                    }}
+                                >
+                                    <h3>{tender.jobName || 'Job'}</h3>
+                                    <p><strong>Your Quote:</strong> €{tender.tenderAmount || 'N/A'}</p>
+                                    <p><strong>Client Budget:</strong> €{tender.clientBudget || 'N/A'}</p>
+                                    <p><strong>Status:</strong> {tender.status || 'Pending'}</p>
+                                    <p style={{ fontSize: '12px', color: '#999' }}>
+                                        Submitted: {tender.createdAt ? new Date(tender.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditTender(tender);
+                                            }}
+                                            style={{ 
+                                                flex: 1,
+                                                backgroundColor: '#28a745',
+                                                color: '#fff',
+                                                padding: '8px 15px',
+                                                border: 'none',
+                                                borderRadius: '5px',
+                                                cursor: 'pointer',
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (window.confirm('Delete this tender?')) {
+                                                    handleDeleteTender(tender.id);
+                                                }
+                                            }}
+                                            style={{ 
+                                                flex: 1,
+                                                backgroundColor: '#dc3545',
+                                                color: '#fff',
+                                                padding: '8px 15px',
+                                                border: 'none',
+                                                borderRadius: '5px',
+                                                cursor: 'pointer',
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>No active tenders.</p>
+                    )}
                 </>
             )}
-        </div>
+
+            {/* Accepted Tenders Section - Only for Suppliers */}
+            {currentUserRole === 'supplier' && (
+                <>
+                    <hr style={{ margin: '20px 0' }} />
+                    <h2>Accepted Tenders</h2>
+                    {tenders.filter(tender => tender.supplierID === currentUserId && tender.status === 'accepted').length > 0 ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
+                            {tenders.filter(tender => tender.supplierID === currentUserId && tender.status === 'accepted').map(tender => (
+                                <div 
+                                    key={tender.id}
+                                    style={{
+                                        border: '2px solid #28a745',
+                                        borderRadius: '8px',
+                                        padding: '15px',
+                                        backgroundColor: '#f0fff4'
+                                    }}
+                                >
+                                    <h3>{tender.jobName || 'Job'}</h3>
+                                    <p><strong>Your Quote:</strong> €{tender.tenderAmount || 'N/A'}</p>
+                                    <p><strong>Client Budget:</strong> €{tender.clientBudget || 'N/A'}</p>
+                                    <p><strong>Status:</strong> <span style={{ color: '#28a745', fontWeight: 'bold' }}>Contracted</span></p>
+                                    <p style={{ fontSize: '12px', color: '#999' }}>
+                                        Accepted: {tender.createdAt ? new Date(tender.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}
+                                    </p>
+                                    <button 
+                                        type="button"
+                                        onClick={() => navigate(`/messaging?clientID=${tender.clientID}&tenderId=${tender.id}`)}
+                                        style={{ 
+                                            marginTop: '10px',
+                                            backgroundColor: '#17a2b8',
+                                            color: '#fff',
+                                            padding: '8px 15px',
+                                            border: 'none',
+                                            borderRadius: '5px',
+                                            cursor: 'pointer',
+                                            fontSize: '12px',
+                                            width: '100%'
+                                        }}
+                                    >
+                                        💬 Message Client
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>No accepted tenders yet.</p>
+                    )}
+                </>
+            )}
+      </div>
     );
 }
