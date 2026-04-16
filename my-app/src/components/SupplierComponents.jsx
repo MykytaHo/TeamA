@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { db} from "../firebase.js";
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 export const SupplierComponents = () => {
     const [jobs, setJobs] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const q = query(collection(db, 'jobList'), orderBy('createdAt', 'desc'));
@@ -13,6 +15,10 @@ export const SupplierComponents = () => {
         return () => unsubscribe();
     }, []);
 
+    const handleApplyNow = (jobName) => {
+    navigate('/tenderjob', { state: { selectedJob: jobName } });
+    };
+    
     return (
         <div>
             {jobs.map(job => (
@@ -22,7 +28,7 @@ export const SupplierComponents = () => {
                     <p>{job.description}</p>
                     <p>Status: {job.status}</p>
                     <p>Tenders: {job.tenderCount}</p>
-                    <button>Apply Now</button>
+                    <button onClick={() => handleApplyNow(job.jobName)}>Apply Now</button>
                 </div>
             ))}
         </div>
