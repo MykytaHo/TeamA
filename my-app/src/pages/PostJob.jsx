@@ -1,9 +1,8 @@
 import {useNavigate} from 'react-router-dom';
 import PreviewJob from '../components/PreviewJob.jsx'
 import {useEffect, useState} from 'react';
-import {db} from '../services/firebase';
+import {db, storage} from '../firebase';
 import {addDoc, collection, getDocs, serverTimestamp, doc, getDoc} from "firebase/firestore";
-import {storage} from '../services/firebase';
 import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import {auth} from "../firebase.js";
 

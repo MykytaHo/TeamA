@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {db} from "../services/firebase.js";
+import {db} from "../firebase";
 import PreviewImage from "../components/PreviewImage.jsx";
 import PreviewTender from "../components/PreviewTender.jsx";
 import {useNavigate, useSearchParams} from 'react-router-dom';

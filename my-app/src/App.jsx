@@ -11,7 +11,6 @@ import {doc, setDoc, getDoc} from 'firebase/firestore';
 import {auth, db} from './firebase';
 import './App.css';
 import Navigation from './components/Navigation';
-import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
@@ -22,9 +21,8 @@ import SearchJobs from "./pages/SearchJobs.jsx";
 import AcceptTender from "./pages/AcceptTender.jsx";
 import LeaveReview from "./pages/LeaveReview.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
-import Messaging from "./pages/messaging.jsx";
+import Messaging from "./pages/Messaging.jsx";
 
-import SearchTraders from './components/SearchTraders';
 import HomeDash from "./pages/HomeDash.jsx";
 
 function App() {
@@ -120,6 +118,7 @@ function App() {
                             <Route path="/leavereview" element={<LeaveReview/>}/>
                             <Route path="/job/:jobId" element={<JobDetails/>}/>
                             <Route path="/messaging" element={<Messaging/>}/>
+                            <Route path="/documents" element={<SupplierDocuments/>}/>
                         </Routes>
                     </div>
                 </Router>
@@ -178,9 +177,6 @@ function App() {
 
         </div>
     );
-    // comment
 }
 
-//comment
 export default App;
-// comment
