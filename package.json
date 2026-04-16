@@ -2,6 +2,6 @@
   "name": "teama-root-shell",
   "private": true,
   "scripts": {
-    "dev": "cd my-app && npm run dev"
+    "dev": "cd my-app && npm run dev -- --host"
   }
 }
