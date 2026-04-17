@@ -112,8 +112,6 @@ const locationData = {
     return (
         <div className="page">
             <h1>Search Jobs</h1>
-            <h1>Search Jobs</h1>
-
             {/* Search Filters */}
             <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                 <h2>Filter Jobs</h2>

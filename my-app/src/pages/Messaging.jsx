@@ -83,27 +83,11 @@ export default function Messaging() {
       .catch(err => console.error("Error filtering users:", err));
   }, [currentUser, users]);
 
-  // Load conversations
-  useEffect(() => {
-    if (!currentUser) return;
-    const unsub = onSnapshot(
-      query(collection(db, "conversations"), where("participants", "array-contains", currentUser.uid)),
-      (snap) => {
-        const list = snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-        setConversations(list);
-        if (!selectedConversation && list.length > 0) {
-          setSelectedConversation(list[0]);
-        }
-      }
-    );
-    return () => unsub();
-  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Load messages for selected conversation
-  useEffect(() => {
-    if (!selectedConversation?.id || !currentUser) { setMessages([]); return; }
+useEffect(() => {
+    if (!selectedConversation?.id || !currentUser) { 
+      setMessages([]); 
+      return; 
+    }
 
     const messagesQuery = query(
       collection(db, "conversations", selectedConversation.id, "messages"),
@@ -115,17 +99,20 @@ export default function Messaging() {
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         
-        // Show notification for new messages from others
-        if (messages.length > 0 && list.length > messages.length) {
-          const newMessage = list[list.length - 1];
-          if (newMessage.senderId !== currentUser.uid && 'Notification' in window && Notification.permission === 'granted') {
-            const senderName = getName(newMessage.senderId);
-            new Notification('New message', {
-              body: `${senderName}: ${newMessage.text}`,
-              icon: '/logo.png' 
-            });
+        snap.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const newMessage = change.doc.data();
+            if (newMessage.senderId !== currentUser.uid && 'Notification' in window && Notification.permission === 'granted') {
+              if (newMessage.createdAt && newMessage.createdAt.toMillis() > Date.now() - 5000) {
+                  const senderName = getName(newMessage.senderId);
+                  new Notification('New message', {
+                    body: `${senderName}: ${newMessage.text}`,
+                    icon: '/logo.png' 
+                  });
+              }
+            }
           }
-        }
+        });
         
         setMessages(list);
       },
@@ -136,7 +123,7 @@ export default function Messaging() {
     );
 
     return () => unsub();
-  }, [selectedConversation, currentUser, messages]); 
+  }, [selectedConversation?.id, currentUser]);
 
   useEffect(() => {
     if (!currentUser || !searchParams.has('clientID')) return;

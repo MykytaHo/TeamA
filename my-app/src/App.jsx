@@ -21,6 +21,7 @@ import LeaveReview from "./pages/LeaveReview.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
 import Messaging from "./pages/Messaging.jsx";
 import HomeDash from "./pages/HomeDash.jsx";
+import AcceptTender from "./pages/AcceptTender.jsx";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -132,6 +133,8 @@ function App() {
                         <Route path="/job/:jobId" element={<JobDetails />} />
                         <Route path="/messaging" element={<Messaging />} />
                         <Route path="/documents" element={<SupplierDocuments />} />
+                        <Route path="/accepttender" element={<AcceptTender />} />
+                        
                     </Routes>
                 </div>
             </Router>
