@@ -103,31 +103,40 @@ export default function Messaging() {
 
   // Load messages for selected conversation
   useEffect(() => {
-    if (!selectedConversation?.id) { setMessages([]); return; }
+    if (!selectedConversation?.id || !currentUser) { setMessages([]); return; }
+
+    const messagesQuery = query(
+      collection(db, "conversations", selectedConversation.id, "messages"),
+      orderBy("createdAt", "asc")
+    );
+
     const unsub = onSnapshot(
-  messagesQuery,
-  (snap) => {
-    const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    
-    // Show notification for new messages from others
-    if (messages.length > 0 && list.length > messages.length) {
-      const newMessage = list[list.length - 1];
-      if (newMessage.senderId !== currentUser.uid && 'Notification' in window && Notification.permission === 'granted') {
-        const senderName = getName(newMessage.senderId);
-        new Notification('New message', {
-          body: `${senderName}: ${newMessage.text}`,
-          icon: '/logo.png' // optional
-        });
+      messagesQuery,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        
+        // Show notification for new messages from others
+        if (messages.length > 0 && list.length > messages.length) {
+          const newMessage = list[list.length - 1];
+          if (newMessage.senderId !== currentUser.uid && 'Notification' in window && Notification.permission === 'granted') {
+            const senderName = getName(newMessage.senderId);
+            new Notification('New message', {
+              body: `${senderName}: ${newMessage.text}`,
+              icon: '/logo.png' 
+            });
+          }
+        }
+        
+        setMessages(list);
+      },
+      (err) => {
+        console.error(err);
+        setNotice("Failed to load messages."); 
       }
-    }
-    
-    setMessages(list);
-  },
-  () => setError("Failed to load messages.")
-);
+    );
 
     return () => unsub();
-  }, [selectedConversation]);
+  }, [selectedConversation, currentUser, messages]); 
 
   useEffect(() => {
     if (!currentUser || !searchParams.has('clientID')) return;
