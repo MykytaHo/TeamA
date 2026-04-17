@@ -1,5 +1,5 @@
-import {useState, useEffect} from 'react';
-import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
@@ -7,31 +7,28 @@ import {
     onAuthStateChanged,
     signOut
 } from 'firebase/auth';
-import {doc, setDoc, getDoc} from 'firebase/firestore';
-import {auth, db} from './firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 import './App.css';
 import Navigation from './components/Navigation';
 import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
-import PostJob from './pages/PostJob.jsx'
-import TenderJob from './pages/TenderJob'
+import PostJob from './pages/PostJob.jsx';
+import TenderJob from './pages/TenderJob';
 import SupplierDocuments from './pages/SupplierDocuments';
 import SearchJobs from "./pages/SearchJobs.jsx";
 import LeaveReview from "./pages/LeaveReview.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
 import Messaging from "./pages/Messaging.jsx";
-
 import HomeDash from "./pages/HomeDash.jsx";
 
 function App() {
     const [user, setUser] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    const [isLogin, setIsLogin] = useState(false);
+    const [isLogin, setIsLogin] = useState(true);
     const [message, setMessage] = useState('');
     const [role, setRole] = useState('client');
-
     const [formData, setFormData] = useState({
         email: '', password: '', name: '', phone: ''
     });
@@ -42,12 +39,9 @@ function App() {
                 if (currentUser) {
                     await currentUser.reload();
                     setUser(currentUser);
-
                     if (currentUser.emailVerified) {
                         const snap = await getDoc(doc(db, "users", currentUser.uid));
-                        if (snap.exists()) {
-                            setUserProfile(snap.data());
-                        }
+                        if (snap.exists()) setUserProfile(snap.data());
                     }
                 } else {
                     setUser(null);
@@ -62,24 +56,23 @@ function App() {
     }, []);
 
     const handleChange = (e) => {
-        setFormData({...formData, [e.target.name]: e.target.value});
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleAuth = async (e) => {
         e.preventDefault();
         setMessage('Processing...');
-
         try {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, formData.email, formData.password);
+                const accounts = JSON.parse(localStorage.getItem('fastAccounts') || '{}');
+                accounts[formData.email] = formData.password;
+                localStorage.setItem('fastAccounts', JSON.stringify(accounts));
             } else {
                 const res = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-                const currentUser = res.user;
-
-                await sendEmailVerification(currentUser);
-
-                await setDoc(doc(db, "users", currentUser.uid), {
-                    uid: currentUser.uid,
+                await sendEmailVerification(res.user);
+                await setDoc(doc(db, "users", res.user.uid), {
+                    uid: res.user.uid,
                     email: formData.email,
                     role: role,
                     name: formData.name,
@@ -87,65 +80,68 @@ function App() {
                     createdAt: new Date()
                 });
             }
+            setFormData({ email: '', password: '', name: '', phone: '' });
         } catch (err) {
             setMessage(err.message);
         }
     };
 
-    const handleLogout = () => {
-        signOut(auth);
-        setFormData({email: '', password: '', name: '', phone: ''});
+    const handleLogout = async () => {
+        await signOut(auth);
+        setFormData({ email: '', password: '', name: '', phone: '' });
         setMessage('');
+    };
+
+    const handleSwitchAccount = async (targetEmail) => {
+        const accounts = JSON.parse(localStorage.getItem('fastAccounts') || '{}');
+        const password = accounts[targetEmail];
+        await handleLogout();
+        if (password) {
+            try {
+                await signInWithEmailAndPassword(auth, targetEmail, password);
+            } catch (err) {
+                setFormData({ email: targetEmail, password: '', name: '', phone: '' });
+                setIsLogin(true);
+            }
+        } else {
+            setFormData({ email: targetEmail, password: '', name: '', phone: '' });
+            setIsLogin(true);
+        }
     };
 
     if (loading) return <div className="loading">⏳ Loading...</div>;
 
     if (user && user.emailVerified && userProfile) {
         return (
-            <>
-                <Router>
-                    <Navigation user={user} userProfile={userProfile} onLogout={handleLogout}/>
-                    <div className="app-container">
-                        <Routes>
-                            <Route path="/" element={<HomeDash/>}/>
-                            
-                            <Route path="/jobs" element={<Jobs/>}/>
-                            <Route path="/profile" element={<Profile/>}/>
-                            {/*<Route path="/search-traders" element={<SearchTraders/>}/>*/}
-                            {/*<Route path="*" element={<Navigate to="/"/>}/>*/}
-                            <Route path="/postjob" element={<PostJob/>}/>
-                            <Route path="/tenderjob" element={<TenderJob/>}/>
-                            <Route path="/searchjobs" element={<SearchJobs/>}/>
-                            
-                            <Route path="/leavereview" element={<LeaveReview/>}/>
-                            <Route path="/job/:jobId" element={<JobDetails/>}/>
-                            <Route path="/messaging" element={<Messaging/>}/>
-                            <Route path="/documents" element={<SupplierDocuments/>}/>
-                        </Routes>
-                    </div>
-                </Router>
-            </>
-        );
-    }
-
-    if (user && !user.emailVerified) {
-        return (
-            <div>
-                <h2>Verify your Email</h2>
-                <p>We sent a verification link to: <b>{user.email}</b></p>
-                <button onClick={() => window.location.reload()}>I verified my email</button>
-                <br/><br/>
-                <button onClick={handleLogout}>Back / Logout</button>
-            </div>
+            <Router>
+                <Navigation 
+                    user={user} 
+                    userProfile={userProfile} 
+                    onLogout={handleLogout}
+                    onSwitch={handleSwitchAccount}
+                />
+                <div className="app-container">
+                    <Routes>
+                        <Route path="/" element={<HomeDash />} />
+                        <Route path="/jobs" element={<Jobs />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/postjob" element={<PostJob />} />
+                        <Route path="/tenderjob" element={<TenderJob />} />
+                        <Route path="/searchjobs" element={<SearchJobs />} />
+                        <Route path="/leavereview" element={<LeaveReview />} />
+                        <Route path="/job/:jobId" element={<JobDetails />} />
+                        <Route path="/messaging" element={<Messaging />} />
+                        <Route path="/documents" element={<SupplierDocuments />} />
+                    </Routes>
+                </div>
+            </Router>
         );
     }
 
     return (
         <div className="page auth-page">
             <h2>{isLogin ? 'Login' : 'Register'}</h2>
-
             {message && <p className="message">{message}</p>}
-
             <form onSubmit={handleAuth}>
                 {!isLogin && (
                     <>
@@ -154,29 +150,17 @@ function App() {
                             <option value="client">Client</option>
                             <option value="supplier">Supplier</option>
                         </select>
-
-                        <input type="text" name="name" placeholder="Full Name" onChange={handleChange} required/>
-
-                        <input type="tel" name="phone" placeholder="Phone Number" onChange={handleChange} required/>
+                        <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} required />
+                        <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} required />
                     </>
                 )}
-
-                <input type="email" name="email" placeholder="Email" onChange={handleChange} required/>
-
-                <input type="password" name="password" placeholder="Password" onChange={handleChange} required/>
-
-                <button type="submit">
-                    {isLogin ? 'Login' : 'Register'}
-                </button>
+                <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+                <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+                <button type="submit">{isLogin ? 'Login' : 'Register'}</button>
             </form>
-
-            <button className="toggle-btn" onClick={() => {
-                setIsLogin(!isLogin);
-                setMessage('');
-            }}>
+            <button className="toggle-btn" onClick={() => { setIsLogin(!isLogin); setMessage(''); }}>
                 {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
             </button>
-
         </div>
     );
 }

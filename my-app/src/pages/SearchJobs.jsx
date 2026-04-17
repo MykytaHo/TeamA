@@ -264,5 +264,4 @@ const locationData = {
             )}
         </div>
     );
-    );
 }
