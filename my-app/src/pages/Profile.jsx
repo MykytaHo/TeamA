@@ -1,6 +1,7 @@
 import {useState, useEffect} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {auth, db} from '../firebase';
+import {getStorage, ref, getDownloadURL, uploadBytes, deleteObject} from 'firebase/storage';
 import {doc, getDoc, updateDoc, collection, query, where, getDocs} from 'firebase/firestore';
 
 export default function Profile() {
@@ -10,7 +11,10 @@ export default function Profile() {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
+    
     // User data states
+    const [profilePicture, setProfilePicture] = useState('');
+const [profilePictureFile, setProfilePictureFile] = useState(null);
     const [userId, setUserId] = useState('');
     const [currentUserId, setCurrentUserId] = useState('');
     const [userRole, setUserRole] = useState('');
@@ -71,6 +75,11 @@ export default function Profile() {
                     setBio(data.bio || '');
                     setSkills(data.skills || '');
 
+                    // Load profile picture
+                    if (data.profilePictureUrl) {
+                        setProfilePicture(data.profilePictureUrl);
+                    }
+
                     // Load favorites only for current user's profile
                     if (profileUserId === currentUser.uid) {
                         const userFavorites = data.favorites || [];
@@ -87,7 +96,8 @@ export default function Profile() {
                         email: data.email || '',
                         phone: data.phone || '',
                         bio: data.bio || '',
-                        skills: data.skills || ''
+                        skills: data.skills || '',
+                        profilePicture: data.profilePictureUrl || ''
                     });
                 } else {
                     setError('User profile not found');
@@ -183,11 +193,52 @@ export default function Profile() {
         }
     };
 
+    const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setProfilePictureFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setProfilePicture(reader.result);
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+    const uploadProfilePicture = async (file) => {
+        try {
+            const storage = getStorage();
+            const fileName = `${userId}_${Date.now()}`;
+            const storageRef = ref(storage, `profilePictures/${fileName}`);
+            
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            
+            // Update Firebase with the picture URL
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, {
+                profilePictureUrl: downloadURL
+            });
+            
+            setProfilePicture(downloadURL);
+            setProfilePictureFile(null);
+            return downloadURL;
+        } catch (err) {
+            console.error('Error uploading profile picture:', err);
+            setError('Failed to upload profile picture');
+        }
+    };
+
     // Save updated data to Firebase
     const handleSave = async () => {
         try {
             setError('');
             setSuccessMessage('');
+
+            let picUrl = profilePicture;
+            if (profilePictureFile) {
+                picUrl = await uploadProfilePicture(profilePictureFile);
+            }
 
             const userRef = doc(db, 'users', userId);
 
@@ -197,7 +248,8 @@ export default function Profile() {
                 email: email,
                 phone: phone,
                 bio: bio,
-                skills: skills
+                skills: skills,
+                profilePictureUrl: picUrl
             });
 
             setOriginalData({
@@ -227,6 +279,8 @@ export default function Profile() {
         setPhone(originalData.phone || '');
         setBio(originalData.bio || '');
         setSkills(originalData.skills || '');
+        setProfilePictureFile(null);  // Add this
+        setProfilePicture(originalData.profilePicture || '');  // Add this
         setIsEditing(false);
         setError('');
     };
@@ -282,6 +336,12 @@ export default function Profile() {
             <div>
                 <h1>User Profile {userId !== currentUserId && '(View Only)'}</h1>
 
+                {profilePicture && (
+                <div style={{ marginBottom: '20px' }}>
+                    <img src={profilePicture} alt="Profile" style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #ddd' }} />
+                </div>
+                )}
+
                 {error && <p style={{color: 'red'}}>{error}</p>}
                 {successMessage && <p style={{color: 'green'}}>{successMessage}</p>}
 
@@ -330,10 +390,10 @@ export default function Profile() {
                         )}
                     </div>
                 ) : (
-                    <form onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSave();
-                    }} className="profile-edit">
+                    <div className="profile-edit" onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSave();
+                    }}>
                         <div className="form-group">
                             <label>Full Name:</label>
                             <input
@@ -344,6 +404,7 @@ export default function Profile() {
                                 required
                             />
                         </div>
+                        
 
                         <div className="form-group">
                             <label>Email:</label>
@@ -397,11 +458,21 @@ export default function Profile() {
                             />
                         </div>
 
+                        <div className="form-group">
+                            <label>Profile Picture:</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleProfilePictureChange}
+                            />
+                            {profilePicture && <p style={{ marginTop: '10px' }}>Preview: <img src={profilePicture} alt="Profile Preview" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} /></p>}
+                        </div>
+
                         <div className="button-group">
-                            <button type="submit">Save Changes</button>
+                            <button type="button" onClick={handleSave}>Save Changes</button>
                             <button type="button" onClick={handleCancel}>Cancel</button>
                         </div>
-                    </form>
+                    </div>
                 )}
             </div>
 

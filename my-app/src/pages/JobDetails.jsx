@@ -248,9 +248,10 @@ export default function JobDetails() {
             )}
 
             <div className="job-details" style={{ marginBottom: '20px', padding: '20px', border: '1px solid #ddd', borderRadius: '5px' }}>
-                <h2>{job.jobName}</h2>
-                <p><strong>Category:</strong> {job.jobCategory}</p>
-                <p><strong>Description:</strong> {job.jobDescription}</p>
+                <h2>{job.title}</h2>
+                <p><strong>Category:</strong> {job.category}</p>
+                <p><strong>Description:</strong> {job.description}</p>
+                <p><strong>Location:</strong> {job.location}</p>
                 <p><strong>Budget:</strong> €{job.budget}</p>
                 <p><strong>Status:</strong> {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Posted'}</p>
                 <p><strong>Tenders:</strong> {job.tenderCount || 0}</p>
