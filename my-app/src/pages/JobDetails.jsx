@@ -256,7 +256,7 @@ export default function JobDetails() {
                 <p><strong>Tenders:</strong> {job.tenderCount || 0}</p>
             </div>
 
-            <div className="job-participants" style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+            <div className="participants-row">
                 {client && (
                     <div className="participant-card" style={{ flex: 1, padding: '15px', border: '1px solid #ddd', borderRadius: '5px' }}>
                         <h3>Client (Posted by)</h3>

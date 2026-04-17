@@ -188,7 +188,7 @@ export default function Messaging() {
   if (!currentUser) return <div className="page"><p>Please sign in to use messaging.</p></div>;
 
   return (
-    <div className="page" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 16, alignItems: "start" }}>
+    <div className="page messaging-grid">
 
       {/* Sidebar */}
       <aside style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, background: "#fff" }}>

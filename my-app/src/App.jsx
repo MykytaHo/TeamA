@@ -40,19 +40,23 @@ function App() {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                await currentUser.reload();
-                setUser(currentUser);
+            try {
+                if (currentUser) {
+                    await currentUser.reload();
+                    setUser(currentUser);
 
-                if (currentUser.emailVerified) {
-                    const snap = await getDoc(doc(db, "users", currentUser.uid));
-                    if (snap.exists()) {
-                        setUserProfile(snap.data());
+                    if (currentUser.emailVerified) {
+                        const snap = await getDoc(doc(db, "users", currentUser.uid));
+                        if (snap.exists()) {
+                            setUserProfile(snap.data());
+                        }
                     }
+                } else {
+                    setUser(null);
+                    setUserProfile(null);
                 }
-            } else {
-                setUser(null);
-                setUserProfile(null);
+            } catch (err) {
+                console.error("Auth error:", err);
             }
             setLoading(false);
         });

@@ -5,6 +5,75 @@
   padding: 40px 24px;
 }
 
+/* ── Search filters ──────────────────────────────────────── */
+.search-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.search-filters input,
+.search-filters select {
+  min-width: 0;
+}
+
+/* ── Messaging layout ────────────────────────────────────── */
+.messaging-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Job card grid ───────────────────────────────────────── */
+.job-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── Participants row (JobDetails) ───────────────────────── */
+.participants-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.participants-row > div {
+  flex: 1;
+  min-width: 260px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .messaging-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .job-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .participants-row {
+    flex-direction: column;
+  }
+  .participants-row > div {
+    min-width: unset;
+  }
+
+  .search-filters {
+    flex-direction: column;
+  }
+  .search-filters input,
+  .search-filters select {
+    flex: unset;
+    width: 100%;
+  }
+}
+
 .app-container {
   min-height: calc(100vh - 60px);
 }

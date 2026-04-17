@@ -105,11 +105,7 @@ const SupplierComponents = () => {
 
             {/* Available Jobs */}
             <h2>Available Jobs</h2>
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: '20px',
-            }}>
+            <div className="job-card-grid">
                 {jobs.map(job => (
                     <div key={job.id} style={{
                         border: "1px solid #e2e8f0",
@@ -133,28 +129,25 @@ const SupplierComponents = () => {
     );
 };
 
-export default function HomeDash() {  // ✅ Moved to top level
+export default function HomeDash() {
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const getUserRole = async () => {
-            let user = auth.currentUser;
-            if (!user) {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                user = auth.currentUser;
-            }
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userDocRef = doc(db, "users", user.uid);  // ✅ Renamed to userDocRef for clarity
-                const userDoc = await getDoc(userDocRef);        // ✅ Pass the ref, not the result
-
-                if (userDoc.exists()) {
-                    setRole(userDoc.data().role);
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        setRole(userDoc.data().role);
+                    }
+                } catch (err) {
+                    console.error("Error loading role:", err);
                 }
             }
             setLoading(false);
-        };
-        getUserRole();
+        });
+        return () => unsubscribe();
     }, []);
 
     return (
