@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react";
-import {db} from "../services/firebase.js";
+import {db} from "../firebase";
 import PreviewImage from "../components/PreviewImage.jsx";
 import PreviewTender from "../components/PreviewTender.jsx";
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useSearchParams} from 'react-router-dom';
 import {auth} from "../firebase.js";
 import {addDoc, increment, updateDoc, doc, collection, getDocs, serverTimestamp} from "firebase/firestore";
 
@@ -16,6 +16,22 @@ export default function TenderJob() {
     const [previewIsDisplayed, setPreviewIsDisplayed] = useState(false);
     const [tender, setTender] = useState(0);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    // Pre-fill job and category when navigated from "Apply Now"
+    useEffect(() => {
+        if (categories.length === 0 || jobNameList.length === 0) return;
+        const jobId = searchParams.get('jobId');
+        if (!jobId) return;
+
+        const job = jobNameList.find(j => j.id === jobId);
+        if (!job) return;
+
+        setJobName(job.jobName);
+
+        const cat = categories.find(c => c.id === job.categoryID);
+        if (cat) setJobCategory(cat.category);
+    }, [categories, jobNameList, searchParams]);
 
 
     useEffect(() => {
@@ -70,7 +86,7 @@ export default function TenderJob() {
             alert("Please complete all fields");
             return;
         } else if (tender > selectedJobDetails.budget) {
-            alert("Your tender is above budget, please revise");
+            alert("Your tender is above budget. Please revise your quote.");
             return;
         }
         setPreviewIsDisplayed(true)
@@ -115,7 +131,7 @@ export default function TenderJob() {
             <form>
                 <h1>Tender Job</h1>
                 <select value={jobCategory} onChange={(event) => setJobCategory(event.target.value)}>
-                    <option value={""}>I am.....</option>
+                    <option value={""}>Select a category...</option>
                     {categories.map((cat) => (
                         <option key={cat.id} value={cat.category}>
                             {cat.category}

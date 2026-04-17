@@ -56,13 +56,7 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
 
                 // Check if viewing another user's profile
                 const userParam = searchParams.get('user');
-                console.log('🔍 DEBUG - URL user param:', userParam);
-                console.log('🔍 DEBUG - searchParams:', searchParams);
-                console.log('🔍 DEBUG - window.location.search:', window.location.search);
-                
                 const profileUserId = userParam || currentUser.uid;
-                
-                console.log('📋 Profile loading for userId:', profileUserId);
                 
                 setUserId(profileUserId);
 
@@ -126,25 +120,12 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
     // Load user rating from reviews
     const loadRating = async (uid) => {
         try {
-            console.log('=== LOADING REVIEWS ===');
-            console.log('Looking for reviews where reviewedId =', uid);
-            
             const reviewsQuery = query(collection(db, 'reviews'), where('reviewedId', '==', uid));
             const reviewsSnapshot = await getDocs(reviewsQuery);
-            
-            console.log('Found', reviewsSnapshot.docs.length, 'reviews');
-            
+
             if (!reviewsSnapshot.empty) {
                 const reviewsData = reviewsSnapshot.docs.map(doc => {
                     const data = doc.data();
-                    console.log('Review data:', {
-                        reviewedId: data.reviewedId,
-                        reviewerId: data.reviewerId,
-                        reviewerName: data.reviewerName,
-                        rating: data.rating,
-                        comment: data.comment
-                    });
-                    
                     let createdAtFormatted = 'Unknown date';
                     
                     // Handle both Firestore Timestamp and regular Date
@@ -171,14 +152,11 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
                     };
                 });
                 setReviews(reviewsData);
-                console.log('✅ Reviews loaded successfully:', reviewsData.length, 'reviews');
-                
                 const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
                 const avgRating = totalRating / reviewsData.length;
                 setRating(Math.round(avgRating * 10) / 10);
                 setReviewsCount(reviewsData.length);
             } else {
-                console.log('❌ No reviews found for this user');
                 setReviews([]);
                 setRating(0);
                 setReviewsCount(0);
@@ -355,7 +333,7 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
 
     return (
         <div className="page">
-            <form>
+            <div>
                 <h1>User Profile {userId !== currentUserId && '(View Only)'}</h1>
 
                 {profilePicture && (
@@ -369,7 +347,7 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
 
                 {!isEditing ? (
                     <div className="profile-view">
-                        <p><strong>Role:</strong> {userRole || 'Not set'}</p>
+                        <p><strong>Role:</strong> {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'Not set'}</p>
                         <p><strong>Name:</strong> {name || 'Not set'}</p>
                         <p><strong>Address:</strong> {address || 'Not set'}</p>
                         <p><strong>Email:</strong> {email || 'Not set'}</p>
@@ -496,7 +474,7 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
                         </div>
                     </div>
                 )}
-            </form>
+            </div>
 
             {/* Supplier Documents Link */}
             {userRole === 'supplier' && (
@@ -530,59 +508,50 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
                 <>
                     <hr style={{ margin: '20px 0' }} />
                     <div className="favorites-section" style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                        <h2>My Favorites</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h2 style={{ margin: 0 }}>My Favourites</h2>
+                            <a
+                                href="/messaging"
+                                style={{
+                                    padding: '8px 14px', fontSize: '13px',
+                                    backgroundColor: '#2563eb', color: '#fff',
+                                    borderRadius: '6px', textDecoration: 'none', fontWeight: 600
+                                }}
+                            >
+                                + Add from Contacts
+                            </a>
+                        </div>
                         <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
-                            Saved workers and clients you want to work with.
+                            Add favourites using the ❤️ button on the Messaging page, or by visiting a user's profile.
                         </p>
                         
-                        {/* Add to favorites form */}
-                        <div style={{ marginBottom: '20px' }}>
-                            <input
-                                type="text"
-                                placeholder="Enter user ID to add to favorites"
-                                id="favoriteId"
-                                style={{ padding: '8px', marginRight: '10px', border: '1px solid #ccc', borderRadius: '3px', width: '250px' }}
-                            />
-                            <button 
-                                onClick={() => {
-                                    const id = document.getElementById('favoriteId').value.trim();
-                                    if (id) {
-                                        addToFavorites(id);
-                                        document.getElementById('favoriteId').value = '';
-                                    }
-                                }}
-                                style={{ padding: '8px 15px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-                            >
-                                Add to Favorites
-                            </button>
-                        </div>
-
                         {favoritesLoading ? (
                             <p>Loading favorites...</p>
                         ) : favorites.length > 0 ? (
                             <ul style={{ listStyle: 'none', padding: 0 }}>
                                 {favorites.map(fav => (
-                                    <li key={fav.id} style={{ padding: '10px', border: '1px solid #eee', borderRadius: '5px', marginBottom: '10px', backgroundColor: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <a href={`/profile?user=${fav.id}`} style={{ color: '#007bff', textDecoration: 'none', cursor: 'pointer' }}><strong>{fav.name}</strong></a> ({fav.role})
-                                            {fav.email && <p style={{fontSize: '12px', color: '#666', margin: '5px 0 0 0'}}>{fav.email}</p>}
+                                    <li key={fav.id} style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px', backgroundColor: '#fff' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <a href={`/profile?user=${fav.id}`} style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>{fav.name}</a>
+                                            <span style={{ fontSize: '13px', color: '#64748b', marginLeft: '6px' }}>({fav.role ? fav.role.charAt(0).toUpperCase() + fav.role.slice(1) : ''})</span>
+                                            {fav.email && <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>{fav.email}</p>}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            <a 
-                                                href={`/messaging?userId=${fav.id}`}
-                                                style={{ padding: '5px 10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '3px', textDecoration: 'none', cursor: 'pointer', fontSize: '12px' }}
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            <a
+                                                href={`/messaging`}
+                                                style={{ padding: '6px 12px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}
                                             >
                                                 Message
                                             </a>
-                                            <a 
+                                            <a
                                                 href={`mailto:${fav.email}`}
-                                                style={{ padding: '5px 10px', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '3px', textDecoration: 'none', cursor: 'pointer', fontSize: '12px' }}
+                                                style={{ padding: '6px 12px', backgroundColor: '#f1f5f9', color: '#475569', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}
                                             >
                                                 Email
                                             </a>
-                                            <button 
+                                            <button
                                                 onClick={() => removeFromFavorites(fav.id)}
-                                                style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '12px' }}
+                                                style={{ padding: '6px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                                             >
                                                 Remove
                                             </button>
@@ -591,7 +560,9 @@ const [profilePictureFile, setProfilePictureFile] = useState(null);
                                 ))}
                             </ul>
                         ) : (
-                            <p>No favorites yet. Start adding users you want to work with!</p>
+                            <p style={{ color: '#64748b', fontSize: '14px' }}>
+                                No favourites yet. Click <strong>+ Add from Contacts</strong> above to add users you've worked with.
+                            </p>
                         )}
                     </div>
                 </>

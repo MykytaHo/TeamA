@@ -19,7 +19,7 @@ export default function Jobs() {
                 if (!user) return;
                 
                 setCurrentUserId(user.uid);
-
+ 
                 // Get current user role
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
@@ -32,7 +32,7 @@ export default function Jobs() {
                 setLoading(false);
             }
         };
-
+ 
         loadData();
 
         // Real-time listener for jobs
@@ -129,9 +129,10 @@ export default function Jobs() {
     };
 
     return (
-        <div className="page">
-            <h1>Jobs & Tenders</h1>
-
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 40px' }}>
+ 
+            <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Jobs & Tenders</h1>
+ 
             {/* Action Buttons */}
             <div style={{ marginBottom: '30px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 {currentUserRole === 'client' && (
@@ -185,12 +186,10 @@ export default function Jobs() {
                                 padding: '15px',
                                 backgroundColor: '#f9f9f9',
                                 cursor: 'pointer',
-                                transition: 'transform 0.2s',
-                                ':hover': { transform: 'scale(1.05)' }
                             }}
                             onClick={() => handleViewJob(job.id)}
                         >
-                            <h3>{job.title}</h3>
+                            <h3>{job.jobName}</h3>
                             <p><strong>Category:</strong> {job.category || 'N/A'}</p>
                             <p><strong>Location:</strong> {job.location || 'N/A'}</p>
                             <p><strong>Budget:</strong> €{job.budget || 'Negotiable'}</p>

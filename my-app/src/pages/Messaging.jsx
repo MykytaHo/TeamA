@@ -3,19 +3,31 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { useSearchParams } from 'react-router-dom';
 import {
-  collection,
-  addDoc,
-  query,
-  where,
-  onSnapshot,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  orderBy,
-  serverTimestamp,
-  getDocs,
+  collection, addDoc, query, where, onSnapshot,
+  doc, getDoc, setDoc, updateDoc, orderBy,
+  serverTimestamp, getDocs,
 } from "firebase/firestore";
+
+// Returns all users the current user has a tender connection with
+const loadConnectedUsers = async (currentUid, allUsers) => {
+  const userDoc = await getDoc(doc(db, "users", currentUid));
+  const role = userDoc.data()?.role;
+
+  const tendersSnap = await getDocs(
+    query(
+      collection(db, "tenderList"),
+      where(role === "client" ? "clientID" : "supplierID", "==", currentUid)
+    )
+  );
+
+  const connectedIds = new Set(
+    tendersSnap.docs.map(d =>
+      role === "client" ? d.data().supplierID : d.data().clientID
+    )
+  );
+
+  return allUsers.filter(u => connectedIds.has(u.id));
+};
 
 export default function Messaging() {
   const [loading, setLoading] = useState(true);
@@ -25,12 +37,13 @@ export default function Messaging() {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [connectedUsers, setConnectedUsers] = useState([]);
+  const [notice, setNotice] = useState("");
 
   const messagesEndRef = useRef(null);
   const [searchParams] = useSearchParams();
 
+  // Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user || null);
@@ -45,121 +58,52 @@ export default function Messaging() {
   return () => unsub();
 }, []);
 
+  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Load all users
   useEffect(() => {
     if (!currentUser) return;
+    const unsub = onSnapshot(collection(db, "users"), (snap) => {
+      setUsers(snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(u => u.id !== currentUser.uid)
+      );
+    });
+    return () => unsub();
+  }, [currentUser]);
 
-    const unsubUsers = onSnapshot(
-      collection(db, "users"),
+  // Filter to connected users via tenders
+  useEffect(() => {
+    if (!currentUser || users.length === 0) return;
+    loadConnectedUsers(currentUser.uid, users)
+      .then(setConnectedUsers)
+      .catch(err => console.error("Error filtering users:", err));
+  }, [currentUser, users]);
+
+  // Load conversations
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsub = onSnapshot(
+      query(collection(db, "conversations"), where("participants", "array-contains", currentUser.uid)),
       (snap) => {
         const list = snap.docs
-          .map((d) => ({ id: d.id, ...d.data() }))
-          .filter((u) => u.id !== currentUser.uid);
-
-        setUsers(list);
-      },
-      () => setError("Failed to load users.")
-    );
-    return () => {
-      unsubUsers();
-    };
-    }, [currentUser]);
-useEffect(() => {
-  if (!currentUser || users.length === 0) return;
-
-  const filterUsersByRole = async () => {
-    try {
-      // Get current user's role
-      const userRef = doc(db, "users", currentUser.uid);
-      const userDoc = await getDoc(userRef);
-      const userRole = userDoc.data().role;
-
-      const filtered = [];
-
-      for (const u of users) {
-        if (userRole === "client") {
-          // Get client's job categories
-          const clientJobsQuery = query(
-            collection(db, "jobs"),
-            where("clientId", "==", currentUser.uid)
-          );
-          const jobsSnap = await getDocs(clientJobsQuery);
-          const jobCategories = [...new Set(jobsSnap.docs.map(d => d.data().category))];
-
-          // Show suppliers who tendered for jobs in those categories
-          const tendersQuery = query(
-            collection(db, "tenders"),
-            where("category", "in", jobCategories),
-            where("supplierId", "==", u.id)
-          );
-          const snap = await getDocs(tendersQuery);
-          if (snap.size > 0) filtered.push(u);
-
-        } else if (userRole === "supplier") {
-          // Show clients they have tenders for
-          const tendersQuery = query(
-            collection(db, "tenders"),
-            where("supplierId", "==", currentUser.uid),
-            where("clientId", "==", u.id)
-          );
-          const snap = await getDocs(tendersQuery);
-          if (snap.size > 0) filtered.push(u);
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+        setConversations(list);
+        if (!selectedConversation && list.length > 0) {
+          setSelectedConversation(list[0]);
         }
       }
-
-      setFilteredUsers(filtered);
-    } catch (err) {
-      console.error("Error filtering users:", err);
-    }
-  };
-
-  filterUsersByRole();
-}, [currentUser, users]);
-
-
-useEffect(() => {
-  if (!currentUser) return;
-
-  const convoQuery = query(
-    collection(db, "conversations"),
-    where("participants", "array-contains", currentUser.uid)
-  );
-
-  const unsubConvos = onSnapshot(
-    convoQuery,
-    (snap) => {
-      const list = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-
-      setConversations(list);
-
-      if (!selectedConversation && list.length > 0) {
-        setSelectedConversation(list[0]);
-      }
-    },
-    () => setError("Failed to load conversations.")
-  );
-
-  return () => {
-    unsubConvos();
-  };
-}, [currentUser, selectedConversation]);
-
-  useEffect(() => {
-    if (!selectedConversation?.id) {
-      setMessages([]);
-      return;
-    }
-
-    const messagesQuery = query(
-      collection(db, "conversations", selectedConversation.id, "messages"),
-      orderBy("createdAt", "asc")
     );
+    return () => unsub();
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load messages for selected conversation
+  useEffect(() => {
+    if (!selectedConversation?.id) { setMessages([]); return; }
     const unsub = onSnapshot(
   messagesQuery,
   (snap) => {
@@ -199,28 +143,19 @@ useEffect(() => {
 
   const getName = (uid) => {
     if (uid === currentUser?.uid) return "You";
-    const user = users.find((u) => u.id === uid);
-    return user?.name || user?.displayName || user?.email || "User";
+    const u = users.find(u => u.id === uid);
+    return u?.name || u?.email || "User";
   };
 
-  const getConversationTitle = (conversation) => {
-    if (!conversation?.participants || !currentUser) return "Conversation";
-
-    const others = conversation.participants.filter((id) => id !== currentUser.uid);
-
-    if (others.length === 0) return "Saved Messages";
-
-    return others.map(getName).join(", ");
+  const getConversationTitle = (convo) => {
+    if (!convo?.participants || !currentUser) return "Conversation";
+    const others = convo.participants.filter(id => id !== currentUser.uid);
+    return others.length === 0 ? "Saved Messages" : others.map(getName).join(", ");
   };
 
   const startConversation = async (otherUser, skipPermissionCheck = false) => {
     if (!currentUser || !otherUser?.id) return;
-
     try {
-      const userRef = doc(db, "users", currentUser.uid);
-      const userDoc = await getDoc(userRef);
-      const userRole = userDoc.data().role;
-
       const participants = [currentUser.uid, otherUser.id].sort();
       const conversationId = participants.join("_");
       const conversationRef = doc(db, "conversations", conversationId);
@@ -275,159 +210,151 @@ useEffect(() => {
       setSelectedConversation({ id: conversationId, participants });
     } catch (err) {
       console.error(err);
-      setError("Could not start conversation.");
+      setNotice("Could not start conversation.");
     }
   };
-    const sendMessage = async () => {
+
+  const sendMessage = async () => {
     const text = messageText.trim();
-
     if (!text || !currentUser || !selectedConversation?.id) return;
-
     try {
-      const convoRef = doc(db, "conversations", selectedConversation.id);
-
       await addDoc(
         collection(db, "conversations", selectedConversation.id, "messages"),
-        {
-          text,
-          senderId: currentUser.uid,
-          createdAt: serverTimestamp(),
-        }
+        { text, senderId: currentUser.uid, createdAt: serverTimestamp() }
       );
-
-      await updateDoc(convoRef, {
+      await updateDoc(doc(db, "conversations", selectedConversation.id), {
         lastMessage: text,
         updatedAt: serverTimestamp(),
       });
-
       setMessageText("");
     } catch {
-      setError("Failed to send message.");
+      setNotice("Failed to send message.");
     }
   };
 
   const addToFavorites = async (userId) => {
     try {
-      const userRef = doc(db, 'users', currentUser.uid);
+      const userRef = doc(db, "users", currentUser.uid);
       const userDoc = await getDoc(userRef);
-      const currentFavorites = userDoc.data().favorites || [];
-      
-      if (!currentFavorites.includes(userId)) {
-        await updateDoc(userRef, {
-          favorites: [...currentFavorites, userId]
-        });
-        setError("Added to favorites!");
-        setTimeout(() => setError(""), 2000);
+      const current = userDoc.data().favorites || [];
+      if (!current.includes(userId)) {
+        await updateDoc(userRef, { favorites: [...current, userId] });
+        setNotice("Added to favourites!");
       } else {
-        setError("Already in favorites");
-        setTimeout(() => setError(""), 2000);
+        setNotice("Already in favourites.");
       }
-    } catch (err) {
-      console.error('Error adding to favorites:', err);
-      setError("Failed to add to favorites");
+      setTimeout(() => setNotice(""), 2500);
+    } catch {
+      setNotice("Failed to add to favourites.");
     }
   };
 
-  const leaveReview = async (userId) => {
-    // Navigate to leave review page with selected user
+  const goToReview = (userId) => {
     window.location.href = `/leavereview?user=${userId}`;
   };
 
-  if (loading) {
-    return <div className="page">Loading...</div>;
-  }
-
-  if (!currentUser) {
-    return <div className="page">Please sign in to use messaging.</div>;
-  }
+  if (loading) return <div className="page"><p>Loading...</p></div>;
+  if (!currentUser) return <div className="page"><p>Please sign in to use messaging.</p></div>;
 
   return (
-    <div className="page" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 16 }}>
-      <aside style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-        <h2>Users</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-          {filteredUsers.map((u) => (
-          <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button onClick={() => startConversation(u)} style={{ flex: 1 }}>
-              {u.name || u.displayName || u.email || "User"}
-            </button>
-             
-              <button 
-                onClick={() => addToFavorites(u.id)}
-                style={{ padding: "4px 8px", fontSize: "12px" }}
-                title="Add to favorites"
-              >
-                ❤️
-              </button>
-              <button 
-                onClick={() => leaveReview(u.id)}
-                style={{ padding: "4px 8px", fontSize: "12px" }}
-                title="Leave review"
-              >
-                ⭐
-              </button>
-            </div>
-          ))}
-        </div>
-       
+    <div className="page messaging-grid">
 
+      {/* Sidebar */}
+      <aside style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, background: "#fff" }}>
 
-        <h2>Conversations</h2>
+        {notice && (
+          <p style={{ fontSize: 13, color: "#2563eb", background: "#eff6ff", padding: "8px 12px", borderRadius: 6, marginBottom: 12 }}>
+            {notice}
+          </p>
+        )}
+
+        <h2 style={{ marginBottom: 10 }}>Contacts</h2>
+        {connectedUsers.length === 0 ? (
+          <p style={{ fontSize: 13, color: "#94a3b8", fontStyle: "italic" }}>
+            No contacts yet. Contacts appear once a tender has been submitted on one of your jobs.
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+            {connectedUsers.map(u => (
+              <div key={u.id} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 10px", borderRadius: 8, background: "#f8fafc",
+                border: "1px solid #e2e8f0"
+              }}>
+                <button
+                  onClick={() => startConversation(u)}
+                  style={{
+                    flex: 1, textAlign: "left", background: "none", border: "none",
+                    padding: 0, color: "#0f172a", fontWeight: 600, fontSize: 14, cursor: "pointer",
+                    boxShadow: "none"
+                  }}
+                >
+                  {u.name || u.email}
+                  <span style={{ fontWeight: 400, fontSize: 12, color: "#64748b", marginLeft: 4 }}>
+                    ({u.role ? u.role.charAt(0).toUpperCase() + u.role.slice(1) : ""})
+                  </span>
+                </button>
+                <button onClick={() => addToFavorites(u.id)} title="Add to favourites"
+                  style={{ padding: "4px 7px", fontSize: 14, background: "none", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+                  ❤️
+                </button>
+                <button onClick={() => goToReview(u.id)} title="Leave a review"
+                  style={{ padding: "4px 7px", fontSize: 14, background: "none", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+                  ⭐
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <h2 style={{ marginBottom: 10 }}>Conversations</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {conversations.map((c) => (
+          {conversations.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#94a3b8", fontStyle: "italic" }}>No conversations yet.</p>
+          ) : conversations.map(c => (
             <button
               key={c.id}
               onClick={() => setSelectedConversation(c)}
               style={{
-                opacity: selectedConversation?.id === c.id ? 1 : 0.85,
-                border: selectedConversation?.id === c.id ? "2px solid #0066cc" : "none",
+                textAlign: "left",
+                background: selectedConversation?.id === c.id ? "#eff6ff" : "#f8fafc",
+                border: selectedConversation?.id === c.id ? "1.5px solid #2563eb" : "1px solid #e2e8f0",
+                borderRadius: 8, padding: "10px 12px"
               }}
             >
-              <div style={{ fontWeight: 700 }}>{getConversationTitle(c)}</div>
-              <div style={{ fontSize: 12 }}>{c.lastMessage || "No messages yet"}</div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "#0f172a" }}>{getConversationTitle(c)}</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{c.lastMessage || "No messages yet"}</div>
             </button>
           ))}
         </div>
       </aside>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 12,
-          minHeight: 500,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <h2>{selectedConversation ? getConversationTitle(selectedConversation) : "Select a conversation"}</h2>
+      {/* Chat panel */}
+      <section style={{
+        border: "1px solid #e2e8f0", borderRadius: 10, padding: 16,
+        minHeight: 520, display: "flex", flexDirection: "column", background: "#fff"
+      }}>
+        <h2 style={{ marginBottom: 12 }}>
+          {selectedConversation ? getConversationTitle(selectedConversation) : "Select a conversation"}
+        </h2>
 
-        {error ? <p className="message">{error}</p> : null}
-
-        <div style={{ flex: 1, overflowY: "auto", margin: "12px 0", paddingRight: 6 }}>
-          {messages.map((m) => {
+        <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, paddingRight: 4 }}>
+          {messages.length === 0 && selectedConversation && (
+            <p style={{ fontSize: 13, color: "#94a3b8", fontStyle: "italic", textAlign: "center", marginTop: 40 }}>
+              No messages yet. Say hello!
+            </p>
+          )}
+          {messages.map(m => {
             const own = m.senderId === currentUser.uid;
-
             return (
-              <div
-                key={m.id}
-                style={{
-                  display: "flex",
-                  justifyContent: own ? "flex-end" : "flex-start",
-                  marginBottom: 8,
-                }}
-              >
-                <div
-                  style={{
-                    background: own ? "#0066cc" : "#f1f3f5",
-                    color: own ? "#fff" : "#333",
-                    padding: "8px 10px",
-                    borderRadius: 8,
-                    maxWidth: "70%",
-                  }}
-                >
-                  <div style={{ fontSize: 11, opacity: 0.8 }}>{getName(m.senderId)}</div>
-                  <div>{m.text}</div>
+              <div key={m.id} style={{ display: "flex", justifyContent: own ? "flex-end" : "flex-start", marginBottom: 8 }}>
+                <div style={{
+                  background: own ? "#2563eb" : "#f1f5f9",
+                  color: own ? "#fff" : "#0f172a",
+                  padding: "9px 13px", borderRadius: 10, maxWidth: "70%",
+                }}>
+                  <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 2 }}>{getName(m.senderId)}</div>
+                  <div style={{ fontSize: 14 }}>{m.text}</div>
                 </div>
               </div>
             );
@@ -438,13 +365,12 @@ useEffect(() => {
         <div style={{ display: "flex", gap: 8 }}>
           <input
             type="text"
-            placeholder="Type a message..."
+            placeholder={selectedConversation ? "Type a message..." : "Select a conversation to start messaging"}
             value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
+            onChange={e => setMessageText(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") sendMessage(); }}
             disabled={!selectedConversation}
+            style={{ flex: 1 }}
           />
           <button onClick={sendMessage} disabled={!selectedConversation || !messageText.trim()}>
             Send
@@ -453,4 +379,4 @@ useEffect(() => {
       </section>
     </div>
   );
-  }
+}

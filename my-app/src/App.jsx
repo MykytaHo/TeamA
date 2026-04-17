@@ -19,9 +19,8 @@ import SupplierDocuments from './pages/SupplierDocuments';
 import SearchJobs from "./pages/SearchJobs.jsx";
 import LeaveReview from "./pages/LeaveReview.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
-import Messaging from "./pages/messaging.jsx";
+import Messaging from "./pages/Messaging.jsx";
 
-import SearchTraders from './components/SearchTraders';
 import HomeDash from "./pages/HomeDash.jsx";
 
 function App() {
@@ -39,19 +38,23 @@ function App() {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                await currentUser.reload();
-                setUser(currentUser);
+            try {
+                if (currentUser) {
+                    await currentUser.reload();
+                    setUser(currentUser);
 
-                if (currentUser.emailVerified) {
-                    const snap = await getDoc(doc(db, "users", currentUser.uid));
-                    if (snap.exists()) {
-                        setUserProfile(snap.data());
+                    if (currentUser.emailVerified) {
+                        const snap = await getDoc(doc(db, "users", currentUser.uid));
+                        if (snap.exists()) {
+                            setUserProfile(snap.data());
+                        }
                     }
+                } else {
+                    setUser(null);
+                    setUserProfile(null);
                 }
-            } else {
-                setUser(null);
-                setUserProfile(null);
+            } catch (err) {
+                console.error("Auth error:", err);
             }
             setLoading(false);
         });
@@ -101,7 +104,7 @@ function App() {
         return (
             <>
                 <Router>
-                    <Navigation user={user} onLogout={handleLogout}/>
+                    <Navigation user={user} userProfile={userProfile} onLogout={handleLogout}/>
                     <div className="app-container">
                         <Routes>
                             <Route path="/" element={<HomeDash/>}/>
@@ -117,6 +120,7 @@ function App() {
                             <Route path="/leavereview" element={<LeaveReview/>}/>
                             <Route path="/job/:jobId" element={<JobDetails/>}/>
                             <Route path="/messaging" element={<Messaging/>}/>
+                            <Route path="/documents" element={<SupplierDocuments/>}/>
                         </Routes>
                     </div>
                 </Router>
@@ -175,9 +179,6 @@ function App() {
 
         </div>
     );
-    // comment
 }
 
-//comment
 export default App;
-// comment

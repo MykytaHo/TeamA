@@ -21,7 +21,6 @@ export default function JobDetails() {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [showFavoritesModal, setShowFavoritesModal] = useState(false);
-    const [copiedId, setCopiedId] = useState(null);
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -120,12 +119,6 @@ export default function JobDetails() {
             console.error('Error submitting review:', err);
             setError('Failed to submit review');
         }
-    };
-
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
-        setCopiedId(text);
-        setTimeout(() => setCopiedId(null), 2000);
     };
 
     const addToFavorites = async () => {
@@ -260,36 +253,18 @@ export default function JobDetails() {
                 <p><strong>Description:</strong> {job.description}</p>
                 <p><strong>Location:</strong> {job.location}</p>
                 <p><strong>Budget:</strong> €{job.budget}</p>
-                <p><strong>Status:</strong> {job.status || 'Posted'}</p>
+                <p><strong>Status:</strong> {job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : 'Posted'}</p>
                 <p><strong>Tenders:</strong> {job.tenderCount || 0}</p>
             </div>
 
-            <div className="job-participants" style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+            <div className="participants-row">
                 {client && (
                     <div className="participant-card" style={{ flex: 1, padding: '15px', border: '1px solid #ddd', borderRadius: '5px' }}>
                         <h3>Client (Posted by)</h3>
                         <p><strong>Name:</strong> {client.name}</p>
-                        <p style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <strong>ID:</strong> 
-                            <span>{client.id}</span>
-                            <button
-                                onClick={() => copyToClipboard(client.id)}
-                                style={{
-                                    padding: '4px 8px',
-                                    backgroundColor: copiedId === client.id ? '#28a745' : '#007bff',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '3px',
-                                    cursor: 'pointer',
-                                    fontSize: '11px'
-                                }}
-                                title="Copy ID"
-                            >
-                                {copiedId === client.id ? '✓' : '📋'}
-                            </button>
-                        </p>
                         <p><strong>Email:</strong> {client.email}</p>
-                        <p><strong>Role:</strong> {client.role}</p>
+                        <p><strong>Role:</strong> {client.role ? client.role.charAt(0).toUpperCase() + client.role.slice(1) : ''}</p>
+                        <a href={`/profile?user=${client.id}`} style={{ display: 'inline-block', marginBottom: '8px', fontSize: '13px', color: '#2563eb' }}>View Profile</a>
                         {canLeaveReview(client.id) && (
                             <button
                                 onClick={() => handleLeaveReview(client)}
@@ -305,27 +280,9 @@ export default function JobDetails() {
                     <div className="participant-card" style={{ flex: 1, padding: '15px', border: '1px solid #ddd', borderRadius: '5px' }}>
                         <h3>Supplier (Assigned)</h3>
                         <p><strong>Name:</strong> {supplier.name}</p>
-                        <p style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <strong>ID:</strong>
-                            <span>{supplier.id}</span>
-                            <button
-                                onClick={() => copyToClipboard(supplier.id)}
-                                style={{
-                                    padding: '4px 8px',
-                                    backgroundColor: copiedId === supplier.id ? '#28a745' : '#007bff',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '3px',
-                                    cursor: 'pointer',
-                                    fontSize: '11px'
-                                }}
-                                title="Copy ID"
-                            >
-                                {copiedId === supplier.id ? '✓' : '📋'}
-                            </button>
-                        </p>
                         <p><strong>Email:</strong> {supplier.email}</p>
-                        <p><strong>Role:</strong> {supplier.role}</p>
+                        <p><strong>Role:</strong> {supplier.role ? supplier.role.charAt(0).toUpperCase() + supplier.role.slice(1) : ''}</p>
+                        <a href={`/profile?user=${supplier.id}`} style={{ display: 'inline-block', marginBottom: '8px', fontSize: '13px', color: '#2563eb' }}>View Profile</a>
                         {canLeaveReview(supplier.id) && (
                             <button
                                 onClick={() => handleLeaveReview(supplier)}
@@ -393,10 +350,10 @@ export default function JobDetails() {
 
             <div style={{ marginTop: '20px' }}>
                 <button
-                    onClick={() => navigate('/jobs')}
+                    onClick={() => navigate(-1)}
                     style={{ padding: '10px 20px', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
                 >
-                    Back to Jobs
+                    Back
                 </button>
             </div>
         </div>
