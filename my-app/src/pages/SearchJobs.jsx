@@ -47,18 +47,18 @@ export default function SearchJobs() {
         <div className="page">
             <h1>Search Jobs</h1>
 
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '28px' }}>
+            <div className="search-filters">
                 <input
                     type="text"
                     placeholder="Search by job name or description..."
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
-                    style={{ flex: '2', minWidth: '200px' }}
+                    style={{ flex: '2' }}
                 />
                 <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    style={{ flex: '1', minWidth: '160px' }}
+                    style={{ flex: '1' }}
                 >
                     <option value="">All Categories</option>
                     {categories.map(cat => (
@@ -68,7 +68,7 @@ export default function SearchJobs() {
                 <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    style={{ flex: '1', minWidth: '140px' }}
+                    style={{ flex: '1' }}
                 >
                     <option value="">All Statuses</option>
                     <option value="posted">Posted</option>
@@ -81,11 +81,7 @@ export default function SearchJobs() {
             {filtered.length === 0 ? (
                 <p style={{ textAlign: 'center' }}>No jobs match your search.</p>
             ) : (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                    gap: '16px'
-                }}>
+                <div className="job-card-grid">
                     {filtered.map(job => (
                         <div key={job.id} style={{
                             background: '#fff',

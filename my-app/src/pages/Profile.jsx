@@ -459,27 +459,28 @@ export default function Profile() {
                         ) : favorites.length > 0 ? (
                             <ul style={{ listStyle: 'none', padding: 0 }}>
                                 {favorites.map(fav => (
-                                    <li key={fav.id} style={{ padding: '10px', border: '1px solid #eee', borderRadius: '5px', marginBottom: '10px', backgroundColor: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <a href={`/profile?user=${fav.id}`} style={{ color: '#007bff', textDecoration: 'none', cursor: 'pointer' }}><strong>{fav.name}</strong></a> ({fav.role ? fav.role.charAt(0).toUpperCase() + fav.role.slice(1) : ''})
-                                            {fav.email && <p style={{fontSize: '12px', color: '#666', margin: '5px 0 0 0'}}>{fav.email}</p>}
+                                    <li key={fav.id} style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '10px', backgroundColor: '#fff' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <a href={`/profile?user=${fav.id}`} style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>{fav.name}</a>
+                                            <span style={{ fontSize: '13px', color: '#64748b', marginLeft: '6px' }}>({fav.role ? fav.role.charAt(0).toUpperCase() + fav.role.slice(1) : ''})</span>
+                                            {fav.email && <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>{fav.email}</p>}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            <a 
-                                                href={`/messaging?userId=${fav.id}`}
-                                                style={{ padding: '5px 10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '3px', textDecoration: 'none', cursor: 'pointer', fontSize: '12px' }}
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            <a
+                                                href={`/messaging`}
+                                                style={{ padding: '6px 12px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}
                                             >
                                                 Message
                                             </a>
-                                            <a 
+                                            <a
                                                 href={`mailto:${fav.email}`}
-                                                style={{ padding: '5px 10px', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '3px', textDecoration: 'none', cursor: 'pointer', fontSize: '12px' }}
+                                                style={{ padding: '6px 12px', backgroundColor: '#f1f5f9', color: '#475569', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}
                                             >
                                                 Email
                                             </a>
-                                            <button 
+                                            <button
                                                 onClick={() => removeFromFavorites(fav.id)}
-                                                style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '12px' }}
+                                                style={{ padding: '6px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                                             >
                                                 Remove
                                             </button>
