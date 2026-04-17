@@ -11,6 +11,7 @@ import {doc, setDoc, getDoc} from 'firebase/firestore';
 import {auth, db} from './firebase';
 import './App.css';
 import Navigation from './components/Navigation';
+import { useAccountManager } from './hooks/useAccountManager';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
@@ -39,6 +40,8 @@ function App() {
     const [formData, setFormData] = useState({
         email: '', password: '', name: '', phone: ''
     });
+
+    const { savedAccounts, saveAccount, removeAccount, clearAllAccounts } = useAccountManager();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -71,7 +74,17 @@ function App() {
 
         try {
             if (isLogin) {
-                await signInWithEmailAndPassword(auth, formData.email, formData.password);
+                const res = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+                // Зберегти акаунт при логіні
+                const userDoc = await getDoc(doc(db, "users", res.user.uid));
+                if (userDoc.exists()) {
+                    saveAccount({
+                        email: formData.email,
+                        name: userDoc.data().name,
+                        uid: res.user.uid,
+                        role: userDoc.data().role
+                    });
+                }
             } else {
                 const res = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
                 const currentUser = res.user;
@@ -86,6 +99,14 @@ function App() {
                     phone: formData.phone,
                     createdAt: new Date()
                 });
+
+                // Зберегти новий акаунт
+                saveAccount({
+                    email: formData.email,
+                    name: formData.name,
+                    uid: currentUser.uid,
+                    role: role
+                });
             }
         } catch (err) {
             setMessage(err.message);
@@ -98,13 +119,36 @@ function App() {
         setMessage('');
     };
 
+    const handleSwitchAccount = async (account) => {
+        try {
+            // Логинимся за допомогою збереженого акаунту
+            // Для цього потрібне паролі - користувач повинен його ввести
+            setFormData({ ...formData, email: account.email });
+            setIsLogin(true);
+            setMessage('Введіть пароль для переключення на цей акаунт');
+        } catch (err) {
+            setMessage(err.message);
+        }
+    };
+
+    const handleRemoveAccount = (email) => {
+        removeAccount(email);
+        setMessage(`Акаунт ${email} видалено зi збережених`);
+    };
+
     if (loading) return <div className="loading">⏳ Loading...</div>;
 
     if (user && user.emailVerified && userProfile) {
         return (
             <>
                 <Router>
-                    <Navigation user={user} onLogout={handleLogout}/>
+                    <Navigation 
+                        user={user} 
+                        onLogout={handleLogout}
+                        savedAccounts={savedAccounts}
+                        onSwitchAccount={handleSwitchAccount}
+                        onRemoveAccount={handleRemoveAccount}
+                    />
                     <div className="app-container">
                         <Routes>
                             <Route path="/" element={<HomeDash/>}/>

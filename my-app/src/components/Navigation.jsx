@@ -5,8 +5,9 @@ import jobIcon from '../assets/briefcase.svg'
 import profileIcon from '../assets/user.svg'
 import leaveIcon from '../assets/leave.svg'
 import logo from '../assets/2-letter-house-logo.png'
+import AccountSwitcher from './AccountSwitcher';
 
-export default function Navigation({user, onLogout}) {
+export default function Navigation({user, onLogout, savedAccounts, onSwitchAccount, onRemoveAccount}) {
 
     const navigate = useNavigate();
     const handleLogout = () => {
@@ -50,16 +51,26 @@ export default function Navigation({user, onLogout}) {
                         <Link tooltip="Leave Review" to="/leavereview" className="nav-link">⭐</Link>
                     </li>
                     {user && (
-                        <li tooltip="Logout" className="nav-icon">
-                            <Link onClick={handleLogout} to="" className="nav-link"><img src={leaveIcon}
-                                                                                         alt="leave icon"
-                                                                                         className="nav-link"
-                                                                                         style={{
-                                                                                             width: '20px',
-                                                                                             height: '20px'
-                                                                                         }}/>
-                            </Link>
-                        </li>
+                        <>
+                            <li className="nav-icon" style={{margin: '0 10px'}}>
+                                <AccountSwitcher 
+                                    user={user}
+                                    savedAccounts={savedAccounts}
+                                    onSwitchAccount={onSwitchAccount}
+                                    onRemoveAccount={onRemoveAccount}
+                                />
+                            </li>
+                            <li tooltip="Logout" className="nav-icon">
+                                <Link onClick={handleLogout} to="" className="nav-link"><img src={leaveIcon}
+                                                                                             alt="leave icon"
+                                                                                             className="nav-link"
+                                                                                             style={{
+                                                                                                 width: '20px',
+                                                                                                 height: '20px'
+                                                                                             }}/>
+                                </Link>
+                            </li>
+                        </>
                     )}
                 </ul>
             </div>
