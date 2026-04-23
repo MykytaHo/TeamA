@@ -27,9 +27,9 @@ export default function TenderJob() {
         const job = jobNameList.find(j => j.id === jobId);
         if (!job) return;
 
-        setJobName(job.jobName);
+        setJobName(job.title);
 
-        const cat = categories.find(c => c.id === job.categoryID);
+        const cat = categories.find(c => c.category === job.category);
         if (cat) setJobCategory(cat.category);
     }, [categories, jobNameList, searchParams]);
 
@@ -61,7 +61,8 @@ export default function TenderJob() {
             const jobNameData = jobNameSnapShot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            }));
+            }))
+            .filter(job => job.status !== 'contracted');
             setJobNameList(jobNameData)
 
         } catch (error) {
@@ -69,7 +70,7 @@ export default function TenderJob() {
         }
     }
 
-    const selectedJobDetails = jobNameList.find(job => job.jobName === jobName);
+    const selectedJobDetails = jobNameList.find(job => job.title === jobName);
 
     const handleImagePreview = () => {
         setIsDisplayed(true);
@@ -141,8 +142,8 @@ export default function TenderJob() {
                 <select value={jobName} onChange={(event) => setJobName(event.target.value)}>
                     <option value={""}>Select a job</option>
                     {jobNameList.map((job) => (
-                        <option key={job.id} value={job.jobName}>
-                            {job.jobName}
+                        <option key={job.id} value={job.title}>
+                            {job.title}
                         </option>
                     ))}
                 </select>

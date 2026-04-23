@@ -31,7 +31,7 @@ const SupplierComponents = () => {
                     snapshot.docs.map(async (d) => {
                         const tender = { id: d.id, ...d.data() };
                         const jobDoc = await getDoc(doc(db, 'jobList', tender.jobID));
-                        tender.jobName = jobDoc.exists() ? jobDoc.data().jobName : 'Unknown Job';
+                        tender.jobName = jobDoc.exists() ? jobDoc.data().title : 'Unknown Job';
                         return tender;
                     })
                 );
@@ -62,19 +62,58 @@ const SupplierComponents = () => {
         }
     };
 
+    const activeTenders = myTenders.filter(t => t.status !== 'accepted');
+    const acceptedTenders = myTenders.filter(t => t.status === 'accepted');
+
     return (
         <div className="page">
-            {/* My Tenders */}
-            {myTenders.length > 0 && (
+            {/* Accepted Tenders - Green Section */}
+            {acceptedTenders.length > 0 && (
                 <div style={{ marginBottom: '32px' }}>
-                    <h2>My Tenders</h2>
+                    <h2>Accepted Tenders</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {acceptedTenders.map(tender => (
+                            <div key={tender.id} style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                background: '#f0fff4', border: '2px solid #22c55e', borderRadius: '10px',
+                                padding: '14px 18px', flexWrap: 'wrap', gap: '10px'
+                            }}>
+                                <div>
+                                    <p style={{ margin: 0, fontWeight: 600, color: '#0f172a' }}>
+                                        {tender.jobName} <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '12px' }}>✓ Accepted</span>
+                                    </p>
+                                    <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>
+                                        Your quote: <strong style={{ color: '#0f172a' }}>€{tender.tenderAmount}</strong>
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => navigate(`/messaging?clientID=${tender.clientID}&tenderId=${tender.id}`)}
+                                    style={{
+                                        padding: '6px 14px', fontSize: '13px',
+                                        backgroundColor: '#22c55e', color: '#fff',
+                                        border: 'none', borderRadius: '6px',
+                                        cursor: 'pointer', fontWeight: 600
+                                    }}
+                                >
+                                    💬 Message Client
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Active Tenders */}
+            {activeTenders.length > 0 && (
+                <div style={{ marginBottom: '32px' }}>
+                    <h2>Active Tenders</h2>
                     {withdrawMessage && (
                         <p style={{ color: '#166534', background: '#dcfce7', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px' }}>
                             {withdrawMessage}
                         </p>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {myTenders.map(tender => (
+                        {activeTenders.map((tender, index) => (
                             <div key={tender.id} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px',
@@ -86,25 +125,40 @@ const SupplierComponents = () => {
                                         Your quote: <strong style={{ color: '#0f172a' }}>€{tender.tenderAmount}</strong>
                                     </p>
                                 </div>
-                                <button
-                                    onClick={() => handleWithdraw(tender)}
-                                    style={{
-                                        padding: '6px 14px', fontSize: '13px',
-                                        backgroundColor: '#fee2e2', color: '#dc2626',
-                                        border: '1px solid #fca5a5', borderRadius: '6px',
-                                        cursor: 'pointer', fontWeight: 600
-                                    }}
-                                >
-                                    Withdraw Tender
-                                </button>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                        onClick={() => handleWithdraw(tender)}
+                                        style={{
+                                            padding: '6px 14px', fontSize: '13px',
+                                            backgroundColor: '#fee2e2', color: '#dc2626',
+                                            border: '1px solid #fca5a5', borderRadius: '6px',
+                                            cursor: 'pointer', fontWeight: 600
+                                        }}
+                                    >
+                                        Withdraw Tender
+                                    </button>
+                                    {index === activeTenders.length - 1 && (
+                                        <button
+                                            onClick={() => navigate('/jobs')}
+                                            style={{
+                                                padding: '6px 14px', fontSize: '13px',
+                                                backgroundColor: '#2563eb', color: '#fff',
+                                                border: 'none', borderRadius: '6px',
+                                                cursor: 'pointer', fontWeight: 600
+                                            }}
+                                        >
+                                            Manage Tenders
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Available Jobs */}
-            <h2>Available Jobs</h2>
+                        {/* Available Jobs */}
+            <h2 style={{ marginTop: '32px' }}>Available Jobs</h2>
             <div className="job-card-grid">
                 {jobs.map(job => (
                     <div key={job.id} style={{
@@ -114,7 +168,7 @@ const SupplierComponents = () => {
                         backgroundColor: '#fff',
                         boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
                     }}>
-                        <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>{job.jobName} — €{job.budget}</h3>
+                        <h3 style={{ margin: '0 0 8px', color: '#0f172a' }}>{job.title} — €{job.budget}</h3>
                         {job.jobImage && <img src={job.jobImage} alt="Job" style={{maxWidth: '100%', borderRadius: '8px', marginBottom: '8px'}} />}
                         <p style={{ fontSize: '14px', color: '#475569', margin: '0 0 6px' }}>{job.description}</p>
                         <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 4px' }}>

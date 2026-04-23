@@ -79,9 +79,7 @@ export default function PostJob() {
 
         setIsDisplayed(true);
     }
-    const handleCancelPost = () => {
-        navigate('/')
-    }
+   
 
     const handleReset = () => {
         let result = confirm("Are you sure you want to reset the form?");
@@ -144,6 +142,7 @@ export default function PostJob() {
             };
             await addDoc(jobsList, newJob);
 
+            closePreview(); 
             alert("Your job is now live!  Press OK to return to home page")
             navigate('/');
         } catch (error) {
@@ -230,7 +229,7 @@ export default function PostJob() {
                 />
                 <button type="button" onClick={handlePreviewJob}>Preview</button>
                 <button type="reset" onClick={handleReset}>Reset</button>
-                <button type="button" onClick={handleCancelPost}>Cancel</button>
+                
 
                 {isDisplayed && <PreviewJob onClickSubmit={handlePostJobClick}
                                             onClickEdit={closePreview}

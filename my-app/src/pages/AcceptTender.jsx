@@ -86,6 +86,11 @@ export default function AcceptTender() {
                 supplierID: tender.supplierID,
             });
 
+            // UPDATE TENDER 
+            await updateDoc(doc(db, 'tenderList', tender.id), {
+                status: 'accepted'
+            });
+
             // Update local state so UI reflects the change immediately
             setJobs(prev => prev.map(j =>
                 j.id === job.id ? { ...j, status: 'accepted', supplierID: tender.supplierID } : j
@@ -188,7 +193,20 @@ export default function AcceptTender() {
                                             </div>
                                             {job.status === 'accepted' ? (
                                                 job.supplierID === tender.supplierID ? (
-                                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#059669' }}>✓ Accepted</span>
+                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#059669' }}>✓ Accepted</span>
+                                                        <button
+                                                            onClick={() => window.location.href = `/messaging?clientID=${auth.currentUser.uid}&supplierId=${tender.supplierID}&tenderId=${tender.id}`}
+                                                            style={{
+                                                                padding: '6px 14px', fontSize: '13px',
+                                                                backgroundColor: '#22c55e', color: '#fff',
+                                                                border: 'none', borderRadius: '6px',
+                                                                cursor: 'pointer', fontWeight: 600
+                                                            }}
+                                                        >
+                                                            💬 Message Supplier
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <span style={{ fontSize: '13px', color: '#94a3b8' }}>Not selected</span>
                                                 )
