@@ -83,6 +83,23 @@ export default function Messaging() {
       .catch(err => console.error("Error filtering users:", err));
   }, [currentUser, users]);
 
+  // Load conversations for current user
+      useEffect(() => {
+        if (!currentUser) return;
+        
+        const conversationsQuery = query(
+          collection(db, "conversations"),
+          where("participants", "array-contains", currentUser.uid),
+          orderBy("updatedAt", "desc")
+        );
+
+        const unsub = onSnapshot(conversationsQuery, (snap) => {
+          setConversations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        });
+
+        return () => unsub();
+      }, [currentUser]);
+
 useEffect(() => {
     if (!selectedConversation?.id || !currentUser) { 
       setMessages([]); 
@@ -152,6 +169,10 @@ useEffect(() => {
   const startConversation = async (otherUser, skipPermissionCheck = false) => {
     if (!currentUser || !otherUser?.id) return;
     try {
+      // Get current user's role
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+      const userRole = userDoc.data()?.role;
+
       const participants = [currentUser.uid, otherUser.id].sort();
       const conversationId = participants.join("_");
       const conversationRef = doc(db, "conversations", conversationId);
@@ -162,37 +183,37 @@ useEffect(() => {
         return;
       }
 
-      let hasPermission = skipPermissionCheck; // Skip if coming from tender
+      let hasPermission = skipPermissionCheck;
 
       if (!skipPermissionCheck) {
-      if (userRole === "client") {
-        const clientJobsQuery = query(
-          collection(db, "jobs"),
-          where("clientId", "==", currentUser.uid)
-        );
-        const jobsSnap = await getDocs(clientJobsQuery);
-        const jobCategories = [...new Set(jobsSnap.docs.map(d => d.data().category))];
-        
-        const tendersQuery = query(
-          collection(db, "tenders"),
-          where("category", "in", jobCategories),
-          where("supplierId", "==", otherUser.id)
-        );
-        const tendersSnap = await getDocs(tendersQuery);
-        hasPermission = tendersSnap.size > 0;
-      } else if (userRole === "supplier") {
-        const tendersQuery = query(
-          collection(db, "tenders"),
-          where("supplierId", "==", currentUser.uid),
-          where("clientId", "==", otherUser.id)
-        );
-        const tendersSnap = await getDocs(tendersQuery);
-        hasPermission = tendersSnap.size > 0;
-      }
+        if (userRole === "client") {
+          const clientJobsQuery = query(
+            collection(db, "jobList"),
+            where("clientID", "==", currentUser.uid)
+          );
+          const jobsSnap = await getDocs(clientJobsQuery);
+          const jobIds = jobsSnap.docs.map(d => d.id);
+          
+          const tendersQuery = query(
+            collection(db, "tenderList"),
+            where("jobID", "in", jobIds),
+            where("supplierID", "==", otherUser.id)
+          );
+          const tendersSnap = await getDocs(tendersQuery);
+          hasPermission = tendersSnap.size > 0;
+        } else if (userRole === "supplier") {
+          const tendersQuery = query(
+            collection(db, "tenderList"),
+            where("supplierID", "==", currentUser.uid),
+            where("clientID", "==", otherUser.id)
+          );
+          const tendersSnap = await getDocs(tendersQuery);
+          hasPermission = tendersSnap.size > 0;
+        }
       }
 
-      if (!hasPermission && !skipPermissionCheck ) {
-        setError("You don't have permission to message this user.");
+      if (!hasPermission && !skipPermissionCheck) {
+        setNotice("You don't have permission to message this user.");
         return;
       }
 
