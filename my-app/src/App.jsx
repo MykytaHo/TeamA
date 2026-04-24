@@ -11,6 +11,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import './App.css';
 import Navigation from './components/Navigation';
+import VerificationPending from './components/VerificationPending';
 import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
 import PostJob from './pages/PostJob.jsx';
@@ -93,6 +94,16 @@ function App() {
         setMessage('');
     };
 
+    const handleVerificationComplete = async () => {
+        // Reload user after email verification
+        await auth.currentUser.reload();
+        setUser(auth.currentUser);
+        if (auth.currentUser.emailVerified) {
+            const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
+            if (snap.exists()) setUserProfile(snap.data());
+        }
+    };
+
     const handleSwitchAccount = async (targetEmail) => {
         const accounts = JSON.parse(localStorage.getItem('fastAccounts') || '{}');
         const password = accounts[targetEmail];
@@ -111,6 +122,11 @@ function App() {
     };
 
     if (loading) return <div className="loading">⏳ Loading...</div>;
+
+    // If user is logged in but email is not verified
+    if (user && !user.emailVerified) {
+        return <VerificationPending user={user} onVerified={handleVerificationComplete} />;
+    }
 
     if (user && user.emailVerified && userProfile) {
         return (
